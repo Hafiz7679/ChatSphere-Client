@@ -92,11 +92,13 @@ const useChatStore = create(
         })),
 
       // Settings
+      chatWallpaper: null,
+      setChatWallpaper: (wallpaper) => set({ chatWallpaper: wallpaper }),
       soundEnabled: true,
       setSoundEnabled: (enabled) => set({ soundEnabled: enabled }),
       notificationsEnabled: true,
       setNotificationsEnabled: (enabled) => set({ notificationsEnabled: enabled }),
-      themeMode: "dark",
+      themeMode: "system",
       setThemeMode: (mode) => set({ themeMode: mode }),
 
       // Call state
@@ -162,6 +164,7 @@ const useChatStore = create(
     {
       name: "chatsphere-store",
       partialize: (state) => ({
+        chatWallpaper: state.chatWallpaper,
         soundEnabled: state.soundEnabled,
         notificationsEnabled: state.notificationsEnabled,
         themeMode: state.themeMode,

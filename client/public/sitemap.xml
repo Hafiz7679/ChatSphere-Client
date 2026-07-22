@@ -1,18 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://chatsphere.app/</loc>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
-  </url>
-  <url>
-    <loc>https://chatsphere.app/login</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://chatsphere.app/register</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url>
+<urlset xmlns="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://chatsphere.app/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://chatsphere.app/login</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://chatsphere.app/register</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://chatsphere.app/forgot-password</loc><changefreq>monthly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://chatsphere.app/chat</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://chatsphere.app/profile</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
 </urlset>

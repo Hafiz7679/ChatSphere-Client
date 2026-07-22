@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { getProfile, updateProfile, updatePassword, uploadAvatar, logoutUser } from "../api/api";
@@ -6,6 +6,8 @@ import useChatStore from "../store/useChatStore";
 import { disconnectSocket } from "../socket/socket";
 import Avatar from "../components/Avatar/Avatar";
 import Button from "../components/Button/Button";
+import ThemeToggle from "../components/ThemeToggle/ThemeToggle";
+import useTheme from "../hooks/useTheme";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -19,6 +21,19 @@ const Profile = () => {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [settings, setSettings] = useState(user.settings || { darkMode: false, notifications: true, sound: true });
+  const chatWallpaper = useChatStore((s) => s.chatWallpaper);
+  const setChatWallpaper = useChatStore((s) => s.setChatWallpaper);
+  const [wallpaperUrl, setWallpaperUrl] = useState(chatWallpaper || "");
+  const fileInputRef = useRef(null);
+
+  const WALLPAPER_PRESETS = [
+    { name: "None", value: null },
+    { name: "Abstract", value: "https://images.unsplash.com/photo-1614851099511-773084f6911d?w=400" },
+    { name: "Ocean", value: "https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=400" },
+    { name: "Forest", value: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400" },
+    { name: "Space", value: "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=400" },
+    { name: "Gradient", value: "https://images.unsplash.com/photo-1557683311-eac922347aa1?w=400" },
+  ];
 
   useEffect(() => {
     if (!currentUser) { navigate("/login"); return; }
@@ -92,17 +107,22 @@ const Profile = () => {
     try { await updateProfile({ settings: updated }); } catch { setSettings(settings); }
   };
 
+  const { themeMode, setTheme } = useTheme();
+
   return (
     <div className="min-h-screen bg-navy-800 bg-grid">
       <div className="fixed inset-0 bg-glow pointer-events-none" />
       <div className="relative max-w-2xl mx-auto px-4 py-8">
-        <div className="flex items-center gap-3 mb-8">
-          <button type="button" onClick={() => navigate("/chat")} className="w-9 h-9 rounded-xl flex items-center justify-center text-surface-400 hover:text-white hover:bg-surface-800 transition">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 18l-6-6 6-6" />
-            </svg>
-          </button>
-          <h1 className="text-xl font-bold text-white">Profile</h1>
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <button type="button" onClick={() => navigate("/chat")} className="w-9 h-9 rounded-xl flex items-center justify-center text-surface-400 hover:text-white hover:bg-surface-800 transition">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 18l-6-6 6-6" />
+              </svg>
+            </button>
+            <h1 className="text-xl font-bold text-white">Profile</h1>
+          </div>
+          <ThemeToggle />
         </div>
 
         <div className="bg-surface-800/30 backdrop-blur-xl border border-surface-700/30 rounded-2xl p-8 shadow-glass mb-6 animate-fade-in">
@@ -159,7 +179,6 @@ const Profile = () => {
             {[
               { key: "notifications", label: "Notifications", desc: "Receive message notifications" },
               { key: "sound", label: "Sound", desc: "Play sound for new messages" },
-              { key: "darkMode", label: "Dark Mode", desc: "Toggle dark theme" },
             ].map(({ key, label, desc }) => (
               <div key={key} className="flex items-center justify-between">
                 <div>
@@ -172,6 +191,55 @@ const Profile = () => {
                 </button>
               </div>
             ))}
+            <div className="flex items-center justify-between pt-2 border-t border-surface-700/20">
+              <div>
+                <p className="text-sm font-medium text-white">Theme</p>
+                <p className="text-xs text-surface-500 mt-0.5">Dark / Light / System</p>
+              </div>
+              <div className="flex items-center gap-2">
+                {["dark", "light", "system"].map((mode) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    onClick={() => setTheme(mode)}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-lg capitalize transition ${
+                      themeMode === mode
+                        ? "bg-brand-500/15 text-brand-300 border border-brand-500/20"
+                        : "text-surface-400 hover:text-white border border-transparent"
+                    }`}
+                  >
+                    {mode === "dark" ? "🌙" : mode === "light" ? "☀️" : "💻"} {mode}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="pt-2 border-t border-surface-700/20">
+              <p className="text-sm font-medium text-white mb-2">Chat Wallpaper</p>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {["None","Abstract","Ocean","Forest","Space","Gradient"].map((name, i) => {
+                  const presets = [null,"https://images.unsplash.com/photo-1614851099511-773084f6911d?w=400","https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=400","https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400","https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=400","https://images.unsplash.com/photo-1557683311-eac922347aa1?w=400"];
+                  return (
+                    <button key={name} type="button" onClick={() => { setWallpaperUrl(presets[i] || ""); setChatWallpaper(presets[i]); }}
+                      className={`px-3 py-1.5 text-xs font-medium rounded-lg transition ${(chatWallpaper || null) === presets[i] ? "bg-brand-500/15 text-brand-300 border border-brand-500/20" : "text-surface-400 hover:text-white border border-transparent"}`}>
+                      {name}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="flex gap-2">
+                <input type="text" placeholder="Image URL..." value={wallpaperUrl} onChange={(e) => setWallpaperUrl(e.target.value)}
+                  className="flex-1 bg-surface-800/50 border border-surface-700/30 rounded-xl px-3 py-2 text-xs text-white placeholder:text-surface-500 outline-none focus:border-brand-500/50" />
+                <button type="button" onClick={() => { setChatWallpaper(wallpaperUrl || null); toast.success("Wallpaper updated"); }}
+                  className="px-3 py-2 rounded-xl text-xs font-medium bg-brand-500/15 text-brand-300 border border-brand-500/20 hover:bg-brand-500/25 transition">Set</button>
+                <button type="button" onClick={() => fileInputRef.current?.click()}
+                  className="px-3 py-2 rounded-xl text-xs font-medium bg-surface-800/50 text-surface-400 border border-surface-700/30 hover:text-white transition">Browse</button>
+                <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => {
+                  const f = e.target.files?.[0]; if (!f) return;
+                  const url = URL.createObjectURL(f);
+                  setWallpaperUrl(url); setChatWallpaper(url); toast.success("Wallpaper set");
+                }} />
+              </div>
+            </div>
           </div>
         </div>
 

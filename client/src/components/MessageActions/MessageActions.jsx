@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-const MessageActions = ({ isOwn, onReply, onReact, onEdit, onDelete, onCopy, onClose }) => {
+const MessageActions = ({ isOwn, onReply, onReact, onEdit, onDelete, onCopy, onForward, onClose }) => {
   const ref = useRef(null);
 
   useEffect(() => {
@@ -14,6 +14,7 @@ const MessageActions = ({ isOwn, onReply, onReact, onEdit, onDelete, onCopy, onC
       {[
         { label: "Reply", icon: "↩️", action: onReply },
         { label: "React", icon: "😊", action: onReact },
+        { label: "Forward", icon: "➡️", action: onForward },
         ...(isOwn ? [{ label: "Edit", icon: "✏️", action: onEdit }, { label: "Delete", icon: "🗑️", action: onDelete, danger: true }] : []),
         { label: "Copy", icon: "📋", action: onCopy },
       ].map((item) => (

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getSocket } from "../socket/socket";
 import { getUsers, getMessages, getChats, createChat, sendMessage } from "../api/api";
@@ -12,15 +12,17 @@ import ChatHeader from "../components/ChatHeader/ChatHeader";
 import ChatBody from "../components/ChatBody/ChatBody";
 import MessageInput from "../components/MessageInput/MessageInput";
 import CallHandler from "../components/CallUI/CallHandler";
-import IncomingCallModal from "../components/CallUI/IncomingCallModal";
-import OutgoingCallUI from "../components/CallUI/OutgoingCallUI";
-import ActiveCallUI from "../components/CallUI/ActiveCallUI";
-import ConnectingCallUI from "../components/CallUI/ConnectingCallUI";
-import EmptyState from "../components/EmptyState/EmptyState";
 import Loader from "../components/Loader/Loader";
-import GifPicker from "../components/GifPicker/GifPicker";
-import MediaGallery from "../components/MediaGallery/MediaGallery";
 import toast from "react-hot-toast";
+
+const GifPicker = lazy(() => import("../components/GifPicker/GifPicker"));
+const MediaGallery = lazy(() => import("../components/MediaGallery/MediaGallery"));
+const MessageSearch = lazy(() => import("../components/MessageSearch/MessageSearch"));
+const IncomingCallModal = lazy(() => import("../components/CallUI/IncomingCallModal"));
+const OutgoingCallUI = lazy(() => import("../components/CallUI/OutgoingCallUI"));
+const ActiveCallUI = lazy(() => import("../components/CallUI/ActiveCallUI"));
+const ConnectingCallUI = lazy(() => import("../components/CallUI/ConnectingCallUI"));
+const EmptyState = lazy(() => import("../components/EmptyState/EmptyState"));
 
 const Chat = () => {
   const navigate = useNavigate();
@@ -40,6 +42,23 @@ const Chat = () => {
   const [hasMore, setHasMore] = useState(true);
   const [dragOver, setDragOver] = useState(false);
   const [showMediaGallery, setShowMediaGallery] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+  const [touchStart, setTouchStart] = useState(null);
+
+  const handleTouchStart = useCallback((e) => {
+    setTouchStart({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+  }, []);
+
+  const handleTouchEnd = useCallback((e) => {
+    if (!touchStart) return;
+    const dx = e.changedTouches[0].clientX - touchStart.x;
+    const dy = e.changedTouches[0].clientY - touchStart.y;
+    if (Math.abs(dx) > 80 && Math.abs(dy) < 100) {
+      if (dx > 0 && !mobileChatOpen) setMobileChatOpen(true);
+      else if (dx < 0 && mobileChatOpen) setMobileChatOpen(false);
+    }
+    setTouchStart(null);
+  }, [touchStart, mobileChatOpen]);
 
   const callActionsRef = useRef({});
   const activeChatRef = useRef(null);
@@ -47,26 +66,24 @@ const Chat = () => {
   const soundEnabledRef = useRef(true);
   const isCallActiveRef = useRef(false);
 
-  const {
-    onlineUsers,
-    activeChat,
-    setActiveChat,
-    messages,
-    setMessages,
-    addMessage,
-    replaceTempMessage,
-    updateMessage,
-    isTyping,
-    setIsTyping,
-    setTypingUser,
-    unreadCounts,
-    clearUnread,
-    setChats,
-    soundEnabled,
-    isCallActive,
-    callData,
-    callStatus,
-  } = useChatStore();
+  const onlineUsers = useChatStore((s) => s.onlineUsers);
+  const activeChat = useChatStore((s) => s.activeChat);
+  const messages = useChatStore((s) => s.messages);
+  const isTyping = useChatStore((s) => s.isTyping);
+  const unreadCounts = useChatStore((s) => s.unreadCounts);
+  const soundEnabled = useChatStore((s) => s.soundEnabled);
+  const isCallActive = useChatStore((s) => s.isCallActive);
+  const callData = useChatStore((s) => s.callData);
+  const callStatus = useChatStore((s) => s.callStatus);
+  const setActiveChat = useChatStore((s) => s.setActiveChat);
+  const setMessages = useChatStore((s) => s.setMessages);
+  const addMessage = useChatStore((s) => s.addMessage);
+  const replaceTempMessage = useChatStore((s) => s.replaceTempMessage);
+  const updateMessage = useChatStore((s) => s.updateMessage);
+  const setIsTyping = useChatStore((s) => s.setIsTyping);
+  const setTypingUser = useChatStore((s) => s.setTypingUser);
+  const clearUnread = useChatStore((s) => s.clearUnread);
+  const setChats = useChatStore((s) => s.setChats);
 
   useSocket();
   useMessageSync();
@@ -324,6 +341,16 @@ const Chat = () => {
     }
   }, [activeChat]);
 
+  const handleTogglePin = useCallback(() => {
+    const { togglePinnedChat } = useChatStore.getState();
+    if (activeChat) togglePinnedChat(activeChat._id);
+  }, [activeChat]);
+
+  const handleToggleArchive = useCallback(() => {
+    const { toggleArchivedChat } = useChatStore.getState();
+    if (activeChat) toggleArchivedChat(activeChat._id);
+  }, [activeChat]);
+
   const handleDragOver = useCallback((e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -443,12 +470,14 @@ const Chat = () => {
     : null;
 
   return (
-    <div
-      className={`flex h-screen w-full overflow-hidden ${theme === "dark" ? "bg-navy-950" : "bg-white"}`}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-    >
+      <div
+        className="flex h-screen w-full overflow-hidden bg-navy-950"
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
       {dragOver && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-navy-900/80 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-3 p-8 rounded-2xl border-2 border-dashed border-brand-500/50 bg-navy-800/50">
@@ -472,7 +501,7 @@ const Chat = () => {
               unreadCounts={unreadCounts}
             />
           </div>
-          <div className={`${mobileChatOpen ? "flex" : "hidden md:flex"} flex-col flex-1 h-full min-w-0 ${theme === "dark" ? "bg-navy-950" : "bg-gray-50"}`}>
+          <div className={`${mobileChatOpen ? "flex" : "hidden md:flex"} flex-col flex-1 h-full min-w-0 bg-navy-950`}>
             {activeChat ? (
               <>
                 <ChatHeader
@@ -483,7 +512,15 @@ const Chat = () => {
                   onAudioCall={handleAudioCall}
                   onVideoCall={handleVideoCall}
                   onMediaGallery={() => setShowMediaGallery(true)}
+                  onSearchToggle={() => setShowSearch((p) => !p)}
+                  onTogglePin={handleTogglePin}
+                  onToggleArchive={handleToggleArchive}
                 />
+                {showSearch && (
+                  <Suspense fallback={null}>
+                    <MessageSearch messages={messages} onClose={() => setShowSearch(false)} />
+                  </Suspense>
+                )}
                 <ChatBody
                   messages={messages}
                   currentUser={currentUser}
@@ -495,10 +532,12 @@ const Chat = () => {
                 />
                 <div className="relative">
                   {showGifPicker && (
-                    <GifPicker
-                      onSelect={handleGifSelect}
-                      onClose={() => setShowGifPicker(false)}
-                    />
+                    <Suspense fallback={null}>
+                      <GifPicker
+                        onSelect={handleGifSelect}
+                        onClose={() => setShowGifPicker(false)}
+                      />
+                    </Suspense>
                   )}
                   <MessageInput
                     selectedUser={activeChat}
@@ -509,24 +548,26 @@ const Chat = () => {
                 </div>
               </>
             ) : (
-              <EmptyState
-                icon={
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-10 h-10">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8-1.06 0-2.077-.163-3.02-.463L3 21l1.395-3.72C3.512 16.014 3 14.56 3 13c0-4.418 4.03-8 9-8s9 3.582 9 7z" />
-                  </svg>
-                }
-                title="Select a conversation"
-                description="Choose a chat from the sidebar to start messaging"
-                action={{
-                  label: "Toggle Theme",
-                  onClick: () =>
-                    useChatStore
-                      .getState()
-                      .setThemeMode(
-                        theme === "dark" ? "light" : "dark"
-                      ),
-                }}
-              />
+              <Suspense fallback={null}>
+                <EmptyState
+                  icon={
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-10 h-10">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8-1.06 0-2.077-.163-3.02-.463L3 21l1.395-3.72C3.512 16.014 3 14.56 3 13c0-4.418 4.03-8 9-8s9 3.582 9 7z" />
+                    </svg>
+                  }
+                  title="Select a conversation"
+                  description="Choose a chat from the sidebar to start messaging"
+                  action={{
+                    label: "Toggle Theme",
+                    onClick: () =>
+                      useChatStore
+                        .getState()
+                        .setThemeMode(
+                          theme === "dark" ? "light" : "dark"
+                        ),
+                  }}
+                />
+              </Suspense>
             )}
           </div>
         </>
@@ -541,51 +582,61 @@ const Chat = () => {
       <CallHandler actionRef={callActionsRef} />
 
       {showMediaGallery && activeChat && (
-        <MediaGallery
-          chatId={activeChat._id || activeChat.chat?._id}
-          onClose={() => setShowMediaGallery(false)}
-        />
+        <Suspense fallback={null}>
+          <MediaGallery
+            chatId={activeChat._id || activeChat.chat?._id}
+            onClose={() => setShowMediaGallery(false)}
+          />
+        </Suspense>
       )}
 
       {callData?.type === "incoming" && callStatus === "ringing" && (
-        <IncomingCallModal
-          callerName={callerUser?.name || "Unknown"}
-          callType={callData.callType}
-          onAccept={() => callActionsRef.current.acceptCall?.()}
-          onReject={() => callActionsRef.current.rejectCall?.()}
-        />
+        <Suspense fallback={null}>
+          <IncomingCallModal
+            callerName={callerUser?.name || "Unknown"}
+            callType={callData.callType}
+            onAccept={() => callActionsRef.current.acceptCall?.()}
+            onReject={() => callActionsRef.current.rejectCall?.()}
+          />
+        </Suspense>
       )}
 
       {callData?.type === "outgoing" && callStatus === "ringing" && (
-        <OutgoingCallUI
-          userName={activeChat?.name || "Unknown"}
-          callType={callData.callType}
-          onCancel={() => callActionsRef.current.endCall?.()}
-        />
+        <Suspense fallback={null}>
+          <OutgoingCallUI
+            userName={activeChat?.name || "Unknown"}
+            callType={callData.callType}
+            onCancel={() => callActionsRef.current.endCall?.()}
+          />
+        </Suspense>
       )}
 
       {callData?.type === "connecting" && callStatus === "connecting" && (
-        <ConnectingCallUI
-          userName={
-            callData?.receiverId
-              ? activeChat?.name
-              : callerUser?.name || "Unknown"
-          }
-          callType={callData?.callType}
-          onCancel={() => callActionsRef.current.endCall?.()}
-        />
+        <Suspense fallback={null}>
+          <ConnectingCallUI
+            userName={
+              callData?.receiverId
+                ? activeChat?.name
+                : callerUser?.name || "Unknown"
+            }
+            callType={callData?.callType}
+            onCancel={() => callActionsRef.current.endCall?.()}
+          />
+        </Suspense>
       )}
 
       {callData?.type === "active" && callStatus === "connected" && (
-        <ActiveCallUI
-          userName={
-            callData?.receiverId
-              ? activeChat?.name
-              : callerUser?.name || "Unknown"
-          }
-          callType={callData.callType}
-          actions={callActionsRef.current}
-        />
+        <Suspense fallback={null}>
+          <ActiveCallUI
+            userName={
+              callData?.receiverId
+                ? activeChat?.name
+                : callerUser?.name || "Unknown"
+            }
+            callType={callData.callType}
+            actions={callActionsRef.current}
+          />
+        </Suspense>
       )}
     </div>
   );

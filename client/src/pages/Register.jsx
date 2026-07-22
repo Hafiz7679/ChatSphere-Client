@@ -6,6 +6,8 @@ import AuthLayout from "../layouts/AuthLayout";
 import Logo from "../components/Logo/Logo";
 import Input from "../components/Input/Input";
 import Button from "../components/Button/Button";
+import { validateRegister, validatePasswordStrength } from "../utils/validation";
+import { sanitizeHtml } from "../utils/sanitize";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -15,53 +17,40 @@ const Register = () => {
     password: "",
     confirmPassword: "",
   });
-  const [passwordStrength, setPasswordStrength] = useState(0);
+  const [errors, setErrors] = useState({});
+  const [passwordStrength, setPasswordStrength] = useState({ score: 0, label: "", color: "", requirements: {} });
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
     if (name === "password") {
-      let score = 0;
-      if (value.length >= 6) score++;
-      if (value.length >= 10) score++;
-      if (/[A-Z]/.test(value)) score++;
-      if (/[0-9]/.test(value)) score++;
-      if (/[^A-Za-z0-9]/.test(value)) score++;
-      setPasswordStrength(score);
+      setPasswordStrength(validatePasswordStrength(value));
     }
   };
 
-  const strengthColors = ["bg-red-500", "bg-orange-500", "bg-amber-500", "bg-lime-500", "bg-emerald-500"];
-  const strengthLabels = ["", "Weak", "Fair", "Good", "Strong", "Very Strong"];
-
+  const strengthColors = ["bg-red-500", "bg-orange-500", "bg-amber-500", "bg-lime-500", "bg-emerald-500", "bg-emerald-500"];
   const handleRegister = async (e) => {
     e.preventDefault();
-    if (!formData.name.trim() || !formData.email.trim() || !formData.password || !formData.confirmPassword) {
-      toast.error("Please fill all fields");
+    const validationErrors = validateRegister(formData);
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      toast.error("Please fix the form errors");
       return;
     }
-    if (formData.password !== formData.confirmPassword) {
-      toast.error("Passwords do not match");
-      return;
-    }
-    if (formData.password.length < 6) {
-      toast.error("Password must be at least 6 characters");
-      return;
-    }
+    setErrors({});
     setLoading(true);
     try {
       const response = await API.post("/auth/register", {
-        name: formData.name.trim(),
-        email: formData.email.trim(),
+        name: sanitizeHtml(formData.name.trim()),
+        email: formData.email.trim().toLowerCase(),
         password: formData.password,
       });
       toast.success(response.data.message);
-      localStorage.setItem("user", JSON.stringify(response.data.user));
-      localStorage.setItem("token", response.data.token);
-      navigate("/chat");
+      navigate("/login");
     } catch (error) {
-      toast.error(error.response?.data?.message || "Registration Failed");
+      toast.error(error.response?.data?.message || "Registration failed");
     } finally {
       setLoading(false);
     }
@@ -81,6 +70,7 @@ const Register = () => {
             placeholder="Enter your name"
             value={formData.name}
             onChange={handleChange}
+            error={errors.name}
           />
           <Input
             label="Email"
@@ -89,6 +79,7 @@ const Register = () => {
             placeholder="you@example.com"
             value={formData.email}
             onChange={handleChange}
+            error={errors.email}
           />
           <Input
             label="Password"
@@ -97,24 +88,43 @@ const Register = () => {
             placeholder="Create a password"
             value={formData.password}
             onChange={handleChange}
+            error={errors.password}
           />
           {formData.password && (
             <div className="mb-4 -mt-3">
               <div className="flex gap-1.5 mb-1">
-                {[0, 1, 2, 3, 4].map((i) => (
+                {[0, 1, 2, 3, 4, 5].map((i) => (
                   <div
                     key={i}
                     className={`h-1 flex-1 rounded-full transition-all duration-300 ${
-                      i < passwordStrength
-                        ? strengthColors[passwordStrength - 1] || "bg-emerald-500"
+                      i < passwordStrength.score
+                        ? strengthColors[passwordStrength.score - 1] || "bg-emerald-500"
                         : "bg-surface-700"
                     }`}
                   />
                 ))}
               </div>
-              <p className="text-[11px] text-surface-500">
-                {strengthLabels[passwordStrength] || ""}
-              </p>
+              {passwordStrength.score > 0 && (
+                <p className="text-[11px] text-surface-500">{passwordStrength.label}</p>
+              )}
+              <div className="mt-2 grid grid-cols-2 gap-1">
+                {[
+                  { key: "length", label: "8+ characters" },
+                  { key: "uppercase", label: "Uppercase letter" },
+                  { key: "lowercase", label: "Lowercase letter" },
+                  { key: "number", label: "Number" },
+                  { key: "special", label: "Special character" },
+                ].map((req) => (
+                  <div key={req.key} className="flex items-center gap-1.5 text-[10px]">
+                    <span className={`${passwordStrength.requirements[req.key] ? "text-emerald-400" : "text-surface-600"}`}>
+                      {passwordStrength.requirements[req.key] ? "✓" : "○"}
+                    </span>
+                    <span className={`${passwordStrength.requirements[req.key] ? "text-surface-400" : "text-surface-600"}`}>
+                      {req.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
           <Input
@@ -124,29 +134,20 @@ const Register = () => {
             placeholder="Confirm your password"
             value={formData.confirmPassword}
             onChange={handleChange}
+            error={errors.confirmPassword}
           />
           <Button type="submit" disabled={loading}>
-            {loading ? (
-              <span className="flex items-center justify-center gap-2">
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Creating account...
-              </span>
-            ) : (
-              "Create Account"
-            )}
+            {loading ? "Creating account..." : "Create Account"}
           </Button>
         </form>
-        <p className="text-center mt-7 text-surface-400 text-sm">
+        <p className="text-center mt-4 text-[11px] text-surface-500">
+          By creating an account, you agree to check your email for a verification link.
+        </p>
+        <p className="text-center mt-5 text-surface-400 text-sm">
           Already have an account?{" "}
-          <Link
-            to="/login"
-            className="text-brand-400 font-semibold hover:text-brand-300 transition"
-          >
+          <Link to="/login" className="text-brand-400 font-semibold hover:text-brand-300 transition">
             Sign in
           </Link>
-        </p>
-        <p className="text-center mt-6 text-[10px] text-surface-500 tracking-wider">
-          Powered by <span className="text-surface-400 font-medium">Hafiz</span>
         </p>
       </div>
     </AuthLayout>

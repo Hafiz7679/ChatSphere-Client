@@ -1,6 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <script>
+      (function() {
+        var theme = 'dark';
+        try { theme = localStorage.getItem('themeMode') || 'system'; } catch(e) {}
+        if (theme === 'system') {
+          theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -8,6 +20,10 @@
     <meta name="description" content="ChatSphere - A modern real-time messaging platform with voice/video calls, built with React, Node.js, MongoDB, and Socket.IO." />
     <meta name="keywords" content="chat, messaging, real-time, socket.io, react, video calls, voice calls" />
     <meta name="author" content="Hafiz" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" />
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7W0Q5nw.woff2" />
     <meta property="og:title" content="ChatSphere - Real-Time Messaging Platform" />
     <meta property="og:description" content="Connect, chat, and collaborate in real-time with ChatSphere. Built with React, Node.js, MongoDB, and Socket.IO." />
     <meta property="og:type" content="website" />

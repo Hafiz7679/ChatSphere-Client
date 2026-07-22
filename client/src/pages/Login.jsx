@@ -25,7 +25,6 @@ const Login = () => {
     const validationErrors = validateLogin(formData);
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
-      toast.error("Please fix the errors.");
       return;
     }
     setErrors({});
@@ -37,10 +36,29 @@ const Login = () => {
       localStorage.setItem("token", response.data.token);
       navigate("/chat");
     } catch (error) {
-      console.error("Login error:", error);
-      toast.error(error.response?.data?.message || "Login Failed");
+      const msg = error.response?.data?.message || "Login failed";
+      toast.error(msg);
+      if (msg.includes("verify your email")) {
+        setShowVerifyPrompt(true);
+      }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const [showVerifyPrompt, setShowVerifyPrompt] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+
+  const resendVerification = async () => {
+    setVerifying(true);
+    try {
+      const res = await API.post("/auth/resend-verification", { email: formData.email });
+      toast.success(res.data.message || "Verification email sent");
+    } catch (error) {
+      const msg = error.response?.data?.message || "Failed to send verification email";
+      toast.error(msg);
+    } finally {
+      setVerifying(false);
     }
   };
 
@@ -51,6 +69,20 @@ const Login = () => {
           <Logo />
           <p className="text-surface-400 text-sm mt-3">Welcome back to your conversations</p>
         </div>
+        {showVerifyPrompt && (
+          <div className="mb-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+            <p className="text-amber-400 text-xs mb-2">
+              Your email is not yet verified. Please check your inbox or request a new link.
+            </p>
+            <button
+              onClick={resendVerification}
+              disabled={verifying}
+              className="text-xs text-brand-400 hover:text-brand-300 font-medium"
+            >
+              {verifying ? "Sending..." : "Resend verification email"}
+            </button>
+          </div>
+        )}
         <form onSubmit={handleLogin}>
           <Input
             label="Email"
@@ -72,36 +104,20 @@ const Login = () => {
           />
           <div className="mt-2">
             <Button type="submit" disabled={loading}>
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Signing in...
-                </span>
-              ) : (
-                "Sign In"
-              )}
+              {loading ? "Signing in..." : "Sign In"}
             </Button>
           </div>
         </form>
         <div className="text-center mt-4">
-          <Link
-            to="/forgot-password"
-            className="text-sm text-surface-400 hover:text-surface-300 transition"
-          >
+          <Link to="/forgot-password" className="text-sm text-surface-400 hover:text-surface-300 transition">
             Forgot password?
           </Link>
         </div>
         <p className="text-center mt-5 text-surface-400 text-sm">
           Don't have an account?{" "}
-          <Link
-            to="/register"
-            className="text-brand-400 font-semibold hover:text-brand-300 transition"
-          >
+          <Link to="/register" className="text-brand-400 font-semibold hover:text-brand-300 transition">
             Create one
           </Link>
-        </p>
-        <p className="text-center mt-6 text-[10px] text-surface-500 tracking-wider">
-          Powered by <span className="text-surface-400 font-medium">Hafiz</span>
         </p>
       </div>
     </AuthLayout>

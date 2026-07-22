@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
-import { getUsers, createChat } from "../../api/api";
+import { useState, useEffect, useMemo } from "react";
+import { getUsers, createChat, sendMessage } from "../../api/api";
 import useChatStore from "../../store/useChatStore";
+import { getSocket } from "../../socket/socket";
 import Loader from "../Loader/Loader";
 
 const ForwardMessageModal = ({ message, onClose }) => {
@@ -9,12 +10,15 @@ const ForwardMessageModal = ({ message, onClose }) => {
   const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const { setActiveChat, addChat } = useChatStore();
+  const currentUser = useMemo(
+    () => JSON.parse(localStorage.getItem("user") || "null"),
+    []
+  );
+  const { setActiveChat, addChat, addMessage } = useChatStore();
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const currentUser = JSON.parse(localStorage.getItem("user") || "null");
         const res = await getUsers();
         const others = (res.data.users || []).filter((u) => u._id !== currentUser?._id);
         setUsers(others);
@@ -25,7 +29,7 @@ const ForwardMessageModal = ({ message, onClose }) => {
       }
     };
     fetchUsers();
-  }, []);
+  }, [currentUser]);
 
   const filtered = search.trim()
     ? users.filter((u) => u.name?.toLowerCase().includes(search.toLowerCase()))
@@ -35,10 +39,35 @@ const ForwardMessageModal = ({ message, onClose }) => {
     if (!selected) return;
     setSending(true);
     try {
-      const res = await createChat(selected._id);
-      if (res.data?.data) {
-        addChat(res.data.data);
+      const chatRes = await createChat(selected._id);
+      const chatData = chatRes.data?.data || chatRes.data;
+      if (chatData) {
+        addChat(chatData);
       }
+      const msgPayload = {
+        sender: currentUser._id,
+        receiver: selected._id,
+        text: message.content || message.text || "",
+        forwarded: true,
+        attachments: message.attachments || [],
+      };
+      const tempId = `temp-${Date.now()}`;
+      const tempMsg = {
+        _id: tempId,
+        sender: { _id: currentUser._id, name: currentUser.name, avatar: currentUser.avatar },
+        content: msgPayload.text,
+        text: msgPayload.text,
+        attachments: msgPayload.attachments,
+        chat: selected._id,
+        status: "sending",
+        forwarded: true,
+        createdAt: new Date().toISOString(),
+        receiver: selected._id,
+      };
+      addMessage(tempMsg);
+      const res = await sendMessage(msgPayload);
+      getSocket().emit("send_message", res.data.data);
+      addMessage(res.data.data);
       setActiveChat(selected);
       onClose();
     } catch {

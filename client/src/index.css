@@ -1,8 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 * {
   margin: 0;
@@ -18,44 +18,26 @@ body {
   font-family: 'Inter', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #0B1020;
-  color: #f1f5f9;
+  background-color: rgb(11 16 32);
+  color: rgb(241 245 249);
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 input, textarea, select, button {
   font-family: inherit;
 }
 
-::-webkit-scrollbar {
-  width: 4px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(124, 58, 237, 0.3);
-  border-radius: 2px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(124, 58, 237, 0.5);
-}
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(124, 58, 237, 0.3); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(124, 58, 237, 0.5); }
 
 @layer utilities {
-  .no-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
-  .no-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-  .text-balance {
-    text-wrap: balance;
-  }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  .text-balance { text-wrap: balance; }
   .bg-grid {
-    background-image: 
+    background-image:
       linear-gradient(rgba(124, 58, 237, 0.03) 1px, transparent 1px),
       linear-gradient(90deg, rgba(124, 58, 237, 0.03) 1px, transparent 1px);
     background-size: 40px 40px;
@@ -63,28 +45,169 @@ input, textarea, select, button {
   .bg-glow {
     background: radial-gradient(circle at 50% 0%, rgba(124, 58, 237, 0.12), transparent 70%);
   }
-  .animate-fade-in {
-    animation: fadeIn 0.3s ease-out;
-  }
-  .animate-scale-in {
-    animation: scaleIn 0.2s ease-out;
-  }
-  .animate-slide-up {
-    animation: slideUp 0.25s ease-out;
-  }
+  .animate-fade-in { animation: fadeIn 0.3s ease-out; }
+  .animate-scale-in { animation: scaleIn 0.2s ease-out; }
+  .animate-slide-up { animation: slideUp 0.25s ease-out; }
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes scaleIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/*
+ * ===== THEME SYSTEM =====
+ *
+ * Colors use space-separated RGB triplets (e.g. "11 16 32") so Tailwind
+ * opacity utilities like bg-surface-800/50 work correctly.
+ *
+ * Dark mode = .dark class on <html> (set by inline script in index.html)
+ * Light mode = no .dark class (overridden via :root:not(.dark))
+ */
+
+:root {
+  /* --- Navy --- */
+  --clr-navy-50: 238 242 255;
+  --clr-navy-100: 224 231 255;
+  --clr-navy-200: 199 210 254;
+  --clr-navy-300: 165 180 252;
+  --clr-navy-400: 129 140 248;
+  --clr-navy-500: 99 102 241;
+  --clr-navy-600: 79 70 229;
+  --clr-navy-700: 67 56 202;
+  --clr-navy-800: 11 16 32;
+  --clr-navy-900: 9 13 26;
+  --clr-navy-950: 6 9 18;
+
+  /* --- Brand --- */
+  --clr-brand-50: 245 243 255;
+  --clr-brand-100: 237 233 254;
+  --clr-brand-200: 221 214 254;
+  --clr-brand-300: 196 181 253;
+  --clr-brand-400: 167 139 250;
+  --clr-brand-500: 124 58 237;
+  --clr-brand-600: 109 40 217;
+  --clr-brand-700: 91 33 182;
+  --clr-brand-800: 76 29 149;
+  --clr-brand-900: 59 7 100;
+
+  /* --- Accent --- */
+  --clr-accent-50: 239 246 255;
+  --clr-accent-100: 219 234 254;
+  --clr-accent-200: 191 219 254;
+  --clr-accent-300: 147 197 253;
+  --clr-accent-400: 96 165 250;
+  --clr-accent-500: 37 99 235;
+  --clr-accent-600: 29 78 216;
+  --clr-accent-700: 30 64 175;
+  --clr-accent-800: 30 58 138;
+  --clr-accent-900: 23 37 84;
+
+  /* --- Surface --- */
+  --clr-surface-50: 248 250 252;
+  --clr-surface-100: 241 245 249;
+  --clr-surface-200: 226 232 240;
+  --clr-surface-300: 203 213 225;
+  --clr-surface-400: 148 163 184;
+  --clr-surface-500: 100 116 139;
+  --clr-surface-600: 71 85 105;
+  --clr-surface-700: 30 41 59;
+  --clr-surface-800: 21 27 48;
+  --clr-surface-900: 13 19 37;
 }
 
-@keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.9); }
-  to { opacity: 1; transform: scale(1); }
+/* LIGHT MODE — activated when <html> has no .dark class */
+:root:not(.dark) {
+  --clr-navy-800: 255 255 255;
+  --clr-navy-900: 255 255 255;
+  --clr-navy-950: 248 250 252;
+
+  --clr-surface-700: 226 232 240;
+  --clr-surface-800: 255 255 255;
+  --clr-surface-900: 241 245 249;
+
+  background-color: rgb(248 250 252);
+  color: rgb(15 23 42);
 }
 
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+/*
+ * Smooth transitions on themeable properties.
+ * NOT using `*` selector to avoid performance issues on large DOMs.
+ */
+body,
+.bg-transition {
+  transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
+}
+
+/* Override standard Tailwind colors that are not custom-defined */
+
+/* In light mode, swap text-white to dark text on theme backgrounds.
+   Gradient/colored buttons keep white text via the second rule. */
+:root:not(.dark) .text-white {
+  color: rgb(15 23 42);
+}
+
+:root:not(.dark) :is(
+  .from-brand-500, .from-brand-600, .from-brand-700,
+  .to-accent-500, .to-accent-600, .to-accent-700,
+  .bg-brand-500, .bg-brand-600, .bg-brand-700,
+  .bg-accent-500, .bg-accent-600,
+  .bg-gradient-to-r, .bg-gradient-to-br,
+  .bg-red-500, .bg-emerald-500, .bg-rose-500
+).text-white {
+  color: #fff !important;
+}
+
+:root.dark .text-black {
+  color: rgb(226 232 240) !important;
+}
+
+:root:not(.dark) .border-white\/30,
+:root:not(.dark) .border-white\/20 {
+  border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+:root:not(.dark) .border-white\/10 {
+  border-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+:root:not(.dark) .bg-white {
+  background-color: rgb(255 255 255) !important;
+}
+
+:root:not(.dark) .placeholder\:text-surface-500::placeholder {
+  color: rgb(148 163 184) !important;
+}
+
+:root:not(.dark) .bg-grid {
+  background-image:
+    linear-gradient(rgba(124, 58, 237, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(124, 58, 237, 0.06) 1px, transparent 1px) !important;
+}
+
+:root:not(.dark) .bg-glow {
+  background: radial-gradient(circle at 50% 0%, rgba(124, 58, 237, 0.06), transparent 70%) !important;
+}
+
+:root:not(.dark) .bg-navy-900\/80 {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+}
+
+:root:not(.dark) .bg-navy-950\/50,
+:root:not(.dark) .bg-navy-900\/50 {
+  background-color: rgba(248, 250, 252, 0.8) !important;
+}
+
+/* Toast notifications — react-hot-toast theme-aware */
+div[role="status"] {
+  background-color: rgb(var(--clr-surface-700)) !important;
+  color: rgb(var(--clr-surface-100)) !important;
+  border: 1px solid rgb(var(--clr-surface-600) / 0.3) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+}
+
+:root:not(.dark) div[role="status"] {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
 }

@@ -86,7 +86,7 @@ const ActiveCallUI = ({ userName, callType, actions }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-navy-950 flex flex-col">
+    <div className="fixed inset-0 z-50 bg-navy-950 flex flex-col" style={{ paddingTop: "env(safe-area-inset-top, 0px)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
       {/* Remote video (full background) */}
       {callType === "video" && remoteStream ? (
         <video ref={remoteVideoRef} autoPlay playsInline className="flex-1 w-full h-full object-cover" />

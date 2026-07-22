@@ -1,33 +1,24 @@
-import useChatStore from "../../store/useChatStore";
-import { useEffect } from "react";
+import useTheme from "../../hooks/useTheme";
 
-const ThemeToggle = () => {
-  const { themeMode, setThemeMode } = useChatStore();
+const MODES = [
+  { key: "dark", label: "Dark", icon: "🌙" },
+  { key: "light", label: "Light", icon: "☀️" },
+  { key: "system", label: "System", icon: "💻" },
+];
 
-  useEffect(() => {
-    if (themeMode === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  }, [themeMode]);
+const ThemeToggle = ({ className = "" }) => {
+  const { themeMode, cycleTheme } = useTheme();
+  const current = MODES.find((m) => m.key === themeMode) || MODES[0];
 
   return (
     <button
       type="button"
-      onClick={() => setThemeMode(themeMode === "dark" ? "light" : "dark")}
-      className="w-9 h-9 rounded-xl flex items-center justify-center text-surface-400 hover:text-white hover:bg-surface-800 transition"
-      aria-label="Toggle theme"
+      onClick={cycleTheme}
+      className={`w-9 h-9 rounded-xl flex items-center justify-center text-surface-400 hover:text-white hover:bg-surface-800 transition ${className}`}
+      aria-label={`Theme: ${current.label}. Click to switch.`}
+      title={`Theme: ${current.label}`}
     >
-      {themeMode === "dark" ? (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m8.66-13.66l-.71.71M4.05 19.95l-.71.71M21 12h-1M4 12H3m16.66 7.66l-.71-.71M4.05 4.05l-.71-.71M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-        </svg>
-      ) : (
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-        </svg>
-      )}
+      <span className="text-base leading-none">{current.icon}</span>
     </button>
   );
 };

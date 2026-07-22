@@ -1,4 +1,4 @@
-import AppRoutes from "./routes/AppRoutes";
+import AppRoutes from "./routes/AppRoutes.jsx";
 import ErrorBoundary from "./components/ErrorBoundary/ErrorBoundary";
 
 function App() {

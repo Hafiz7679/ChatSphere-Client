@@ -1,6 +1,6 @@
 const OutgoingCallUI = ({ userName, callType, onCancel }) => {
   return (
-    <div className="fixed inset-0 z-50 bg-navy-950 flex flex-col items-center justify-center">
+    <div className="fixed inset-0 z-50 bg-navy-950 flex flex-col items-center justify-center" style={{ paddingTop: "env(safe-area-inset-top, 0px)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
       <div className="w-28 h-28 rounded-full bg-gradient-to-br from-brand-500 to-accent-500 flex items-center justify-center text-white text-5xl font-bold mb-6 shadow-xl shadow-brand-500/25 ring-4 ring-brand-500/15">
         {userName?.charAt(0)?.toUpperCase() || "?"}
       </div>

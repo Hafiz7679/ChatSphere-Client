@@ -1,11 +1,13 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, memo, useEffect, useMemo, useRef, useState } from "react";
 import { formatTime, formatDate, shouldShowDateSeparator } from "../../utils/helpers";
 import MessageActions from "../MessageActions/MessageActions";
 import MessageReactions from "../MessageReactions/MessageReactions";
 import useChatStore from "../../store/useChatStore";
 import { reactToMessage } from "../../api/api";
-import ImageViewer from "../ImageViewer/ImageViewer";
 import ScrollToBottom from "../ScrollToBottom/ScrollToBottom";
+
+const ImageViewer = lazy(() => import("../ImageViewer/ImageViewer"));
+const ForwardMessageModal = lazy(() => import("../ForwardMessageModal/ForwardMessageModal"));
 
 const StatusIcon = ({ status }) => {
   if (status === "sending") {
@@ -109,6 +111,7 @@ const ChatBody = ({ messages, currentUser, loading, selectedUser, onReplyMessage
   const [menuState, setMenuState] = useState(null);
   const [showReactions, setShowReactions] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
+  const [forwardMessage, setForwardMessage] = useState(null);
   const { activeChat } = useChatStore();
 
   useEffect(() => {
@@ -173,8 +176,11 @@ const ChatBody = ({ messages, currentUser, loading, selectedUser, onReplyMessage
     setMenuState(null);
   };
 
+  const chatWallpaper = useChatStore((s) => s.chatWallpaper);
+  const wallpaperStyle = useMemo(() => chatWallpaper ? { backgroundImage: `url(${chatWallpaper})`, backgroundSize: "cover", backgroundPosition: "center" } : {}, [chatWallpaper]);
+
   return (
-    <div ref={containerRef} className="flex-1 overflow-y-auto px-4 md:px-8 py-5 bg-navy-950 bg-grid">
+    <div ref={containerRef} className="flex-1 overflow-y-auto px-4 md:px-8 py-5 bg-navy-950 bg-grid" style={wallpaperStyle}>
       {loading ? (
         <div className="space-y-3 max-w-3xl mx-auto">
           {Array.from({ length: 5 }).map((_, i) => (
@@ -199,12 +205,6 @@ const ChatBody = ({ messages, currentUser, loading, selectedUser, onReplyMessage
             const prev = messages[index - 1];
             const showDate = shouldShowDateSeparator(message, prev);
             const reactions = message.reactions || [];
-            const summary = reactions.reduce((acc, r) => {
-              const ex = acc.find((a) => a.emoji === r.emoji);
-              if (ex) ex.count++;
-              else acc.push({ emoji: r.emoji, count: 1 });
-              return acc;
-            }, []);
 
             return (
               <div key={message._id || index} className="animate-fade-in">
@@ -305,6 +305,7 @@ const ChatBody = ({ messages, currentUser, loading, selectedUser, onReplyMessage
                         isOwn={isOwn}
                         onReply={() => { if (onReplyMessage) onReplyMessage(message); setMenuState(null); }}
                         onReact={() => setShowReactions(message._id)}
+                        onForward={() => { setForwardMessage(message); setMenuState(null); }}
                         onEdit={() => handleEdit(message)}
                         onDelete={() => handleDelete(message)}
                         onCopy={() => { navigator.clipboard.writeText(message.content || message.text || ""); setMenuState(null); }}
@@ -321,10 +322,17 @@ const ChatBody = ({ messages, currentUser, loading, selectedUser, onReplyMessage
       )}
       <ScrollToBottom containerRef={containerRef} bottomRef={bottomRef} />
       {previewImage && (
-        <ImageViewer src={previewImage} onClose={() => setPreviewImage(null)} />
+        <Suspense fallback={null}>
+          <ImageViewer src={previewImage} onClose={() => setPreviewImage(null)} />
+        </Suspense>
+      )}
+      {forwardMessage && (
+        <Suspense fallback={null}>
+          <ForwardMessageModal message={forwardMessage} onClose={() => setForwardMessage(null)} />
+        </Suspense>
       )}
     </div>
   );
 };
 
-export default ChatBody;
+export default memo(ChatBody);

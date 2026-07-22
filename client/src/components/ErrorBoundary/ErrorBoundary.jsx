@@ -12,6 +12,13 @@ class ErrorBoundary extends Component {
 
   componentDidCatch(error, errorInfo) {
     console.error("ErrorBoundary caught:", error, errorInfo);
+    try {
+      const user = JSON.parse(localStorage.getItem("user") || "null");
+      fetch("/api/log/error", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: error.message, stack: error.stack, url: window.location.href, userId: user?._id }),
+      }).catch(() => {});
+    } catch {}
   }
 
   render() {

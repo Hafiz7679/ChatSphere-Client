@@ -20,11 +20,11 @@ const ForgotPassword = () => {
     }
     setLoading(true);
     try {
-      await API.post("/auth/forgot-password", { email });
+      await API.post("/auth/forgot-password", { email: email.trim().toLowerCase() });
       setSent(true);
       toast.success("Check your email for the reset link");
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to send reset email");
+      toast.error(error.response?.data?.message || "Something went wrong");
     } finally {
       setLoading(false);
     }
@@ -47,7 +47,7 @@ const ForgotPassword = () => {
               </svg>
             </div>
             <p className="text-surface-300 text-sm">
-              We sent a password reset link to <strong className="text-white">{email}</strong>
+              If an account exists for <strong className="text-white">{email}</strong>, a reset link has been sent.
             </p>
             <p className="text-surface-500 text-xs mt-2">
               Didn't receive it?{" "}

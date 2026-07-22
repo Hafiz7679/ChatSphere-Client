@@ -1,10 +1,21 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { lazy, memo, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getSocket } from "../../socket/socket";
 import { sendMessage, uploadFile, getChats } from "../../api/api";
 import useChatStore from "../../store/useChatStore";
 import EmojiPicker from "../EmojiPicker/EmojiPicker";
 import FilePreview from "../FilePreview/FilePreview";
-import VoiceRecorder from "../VoiceRecorder/VoiceRecorder";
+import SmartReply from "../SmartReply/SmartReply";
+import { debounce } from "../../utils/helpers";
+
+const VoiceRecorder = lazy(() => import("../VoiceRecorder/VoiceRecorder"));
+
+const emitTyping = debounce((socket, sender, receiver) => {
+  socket.emit("typing", { sender, receiver });
+}, 300);
+
+const emitStopTyping = debounce((socket, sender, receiver) => {
+  socket.emit("stop_typing", { sender, receiver });
+}, 2000);
 
 const MessageInput = ({ selectedUser, replyTo, onClearReply, onGifClick }) => {
   const [message, setMessage] = useState("");
@@ -13,7 +24,6 @@ const MessageInput = ({ selectedUser, replyTo, onClearReply, onGifClick }) => {
   const [attachedFile, setAttachedFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [showVoice, setShowVoice] = useState(false);
-  const typingTimeout = useRef(null);
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
   const currentUser = JSON.parse(localStorage.getItem("user") || "null");
@@ -30,16 +40,15 @@ const MessageInput = ({ selectedUser, replyTo, onClearReply, onGifClick }) => {
       const value = e.target.value;
       setMessage(value);
       resizeTextarea();
+      const socket = getSocket();
       if (!value.trim()) {
-        getSocket().emit("stop_typing", { sender: currentUser._id, receiver: selectedUser._id });
-        clearTimeout(typingTimeout.current);
+        emitTyping.cancel();
+        emitStopTyping.cancel();
+        socket.emit("stop_typing", { sender: currentUser._id, receiver: selectedUser._id });
         return;
       }
-      getSocket().emit("typing", { sender: currentUser._id, receiver: selectedUser._id });
-      clearTimeout(typingTimeout.current);
-      typingTimeout.current = setTimeout(() => {
-        getSocket().emit("stop_typing", { sender: currentUser._id, receiver: selectedUser._id });
-      }, 2000);
+      emitTyping(socket, currentUser._id, selectedUser._id);
+      emitStopTyping(socket, currentUser._id, selectedUser._id);
     },
     [currentUser, selectedUser, resizeTextarea]
   );
@@ -82,7 +91,8 @@ const MessageInput = ({ selectedUser, replyTo, onClearReply, onGifClick }) => {
 
       const response = await sendMessage(msgData);
       getSocket().emit("send_message", response.data.data);
-      clearTimeout(typingTimeout.current);
+      emitTyping.cancel();
+      emitStopTyping.cancel();
       getSocket().emit("stop_typing", { sender: currentUser._id, receiver: selectedUser._id });
       // Refresh chats if this created a new conversation
       const chatId = response.data.data?.chat?._id || response.data.data?.chat;
@@ -166,15 +176,25 @@ const MessageInput = ({ selectedUser, replyTo, onClearReply, onGifClick }) => {
 
   useEffect(() => {
     return () => {
-      clearTimeout(typingTimeout.current);
+      emitTyping.cancel();
+      emitStopTyping.cancel();
       if (selectedUser && currentUser) {
         getSocket().emit("stop_typing", { sender: currentUser._id, receiver: selectedUser._id });
       }
     };
   }, [selectedUser, currentUser]);
 
+  const messages = useChatStore((s) => s.messages);
+  const smartReplyMessages = useMemo(() => messages.slice(-20), [messages]);
+
+  const handleSmartReply = useCallback((text) => {
+    setMessage(text);
+    textareaRef.current?.focus();
+  }, []);
+
   return (
     <div className="px-4 md:px-6 pt-2 pb-4 bg-navy-900 border-t border-surface-700/30">
+      <SmartReply messages={smartReplyMessages} currentUser={currentUser} onSelectReply={handleSmartReply} />
       {replyTo && (
         <div className="flex items-center gap-3 mb-2.5 bg-surface-800/50 rounded-xl px-4 py-2.5 border border-surface-700/30 animate-slide-up">
           <div className="w-0.5 h-9 rounded-full bg-brand-500 shrink-0" />
@@ -190,7 +210,7 @@ const MessageInput = ({ selectedUser, replyTo, onClearReply, onGifClick }) => {
         </div>
       )}
       {attachedFile && <div className="mb-2.5"><FilePreview file={attachedFile} onRemove={() => setAttachedFile(null)} /></div>}
-      {showVoice && <div className="mb-2.5"><VoiceRecorder onSend={handleVoiceSend} onCancel={() => setShowVoice(false)} /></div>}
+      {showVoice && <div className="mb-2.5"><Suspense fallback={null}><VoiceRecorder onSend={handleVoiceSend} onCancel={() => setShowVoice(false)} /></Suspense></div>}
       <div className={`flex items-end gap-2 bg-surface-800/50 border border-surface-700/30 rounded-2xl px-3 py-1.5 transition-all focus-within:border-brand-500/50 focus-within:ring-2 focus-within:ring-brand-500/15 ${uploading ? "border-brand-500/50" : ""}`}>
         <button type="button" onClick={() => setShowEmoji(!showEmoji)} className="shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-surface-400 hover:text-white hover:bg-surface-700/50 transition">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
@@ -208,6 +228,7 @@ const MessageInput = ({ selectedUser, replyTo, onClearReply, onGifClick }) => {
         </button>
         <input ref={fileInputRef} type="file" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) { if (f.size > 50 * 1024 * 1024) { alert("File too large. Max 50MB."); return; } setAttachedFile(f); } }} />
         <textarea ref={textareaRef} rows={1} placeholder="Type a message" value={message} onChange={handleTyping} onKeyDown={handleKeyDown}
+          inputMode="text" enterKeyHint="send" autoComplete="off"
           className="flex-1 resize-none bg-transparent outline-none text-sm py-2 px-1 max-h-32 leading-relaxed text-white placeholder:text-surface-500" />
         {!message.trim() && !attachedFile && (
           <button type="button" onClick={() => setShowVoice(true)} className="shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-surface-400 hover:text-white hover:bg-surface-700/50 transition">
@@ -231,4 +252,4 @@ const MessageInput = ({ selectedUser, replyTo, onClearReply, onGifClick }) => {
   );
 };
 
-export default MessageInput;
+export default memo(MessageInput);

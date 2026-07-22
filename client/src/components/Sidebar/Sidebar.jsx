@@ -1,8 +1,9 @@
-import { useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useChatStore from "../../store/useChatStore";
 import CreateGroupModal from "../GroupChat/CreateGroupModal";
 import Avatar from "../Avatar/Avatar";
+import ThemeToggle from "../ThemeToggle/ThemeToggle";
 
 const currentUser = (() => {
   try { return JSON.parse(localStorage.getItem("user")); }
@@ -21,11 +22,29 @@ const Sidebar = ({
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [tab, setTab] = useState("chats");
   const navigate = useNavigate();
-  const { chats } = useChatStore();
+  const chats = useChatStore((s) => s.chats);
+  const rawArchived = useChatStore((s) => s.archivedChats);
+  const rawPinned = useChatStore((s) => s.pinnedChats);
+  const archivedChats = useMemo(() => rawArchived || [], [rawArchived]);
+  const pinnedChats = useMemo(() => rawPinned || [], [rawPinned]);
 
   const chatConversations = useMemo(() => {
     return chats.filter((c) => !c.isGroupChat);
   }, [chats]);
+
+  const pinnedConversations = useMemo(() => {
+    return chatConversations.filter((c) => pinnedChats.includes(c._id));
+  }, [chatConversations, pinnedChats]);
+
+  const normalConversations = useMemo(() => {
+    return chatConversations.filter((c) => !pinnedChats.includes(c._id) && !archivedChats.includes(c._id));
+  }, [chatConversations, pinnedChats, archivedChats]);
+
+  const archivedConversations = useMemo(() => {
+    return chatConversations.filter((c) => archivedChats.includes(c._id));
+  }, [chatConversations, archivedChats]);
+
+  const [showArchived, setShowArchived] = useState(false);
 
   const lastMessageText = (chat) => {
     if (!chat.latestMessage) return "";
@@ -69,12 +88,17 @@ const Sidebar = ({
     [users, search]
   );
 
+  const allDisplayChats = useMemo(
+    () => [...pinnedConversations, ...normalConversations],
+    [pinnedConversations, normalConversations]
+  );
+
   const filteredChats = useMemo(
-    () => chatConversations.filter((c) => {
+    () => allDisplayChats.filter((c) => {
       const other = getDisplayUser(c);
       return other ? other.name.toLowerCase().includes(search.toLowerCase()) : true;
     }),
-    [chatConversations, search, getDisplayUser]
+    [allDisplayChats, search, getDisplayUser]
   );
 
   const filteredGroups = useMemo(
@@ -127,6 +151,7 @@ const Sidebar = ({
                 <path strokeLinecap="round" d="M20 21a8 8 0 10-16 0" />
               </svg>
             </button>
+            <ThemeToggle />
           </div>
         </div>
         <div className="relative">
@@ -266,7 +291,7 @@ const Sidebar = ({
           )
         ) : (
           /* Chats tab - show actual conversations */
-          filteredChats.length === 0 ? (
+          filteredChats.length === 0 && !showArchived ? (
             <div className="flex flex-col items-center justify-center h-48 text-surface-500 gap-3 px-6 text-center">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-10 h-10 text-surface-600">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8-1.06 0-2.077-.163-3.02-.463L3 21l1.395-3.72C3.512 16.014 3 14.56 3 13c0-4.418 4.03-8 9-8s9 3.582 9 7z" />
@@ -274,6 +299,43 @@ const Sidebar = ({
               <p className="text-sm font-medium">No conversations yet</p>
               <p className="text-xs text-surface-500">Browse the Users tab to start a chat</p>
             </div>
+          ) : showArchived ? (
+            archivedConversations.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-48 text-surface-500 gap-3 px-6 text-center">
+                <p className="text-sm font-medium">No archived chats</p>
+                <button type="button" onClick={() => setShowArchived(false)} className="text-xs text-brand-400 hover:text-brand-300 transition">Back to chats</button>
+              </div>
+            ) : (
+              <div className="px-2 space-y-0.5">
+                {archivedConversations.map((chat) => {
+                  const otherUser = getDisplayUser(chat);
+                  const chatId = chat._id;
+                  const unread = unreadCounts?.[otherUser?._id || chatId] || 0;
+                  const isOnline = otherUser ? allOnlineUsers.includes(otherUser._id) : false;
+                  const isSelected = selectedUser?._id === (otherUser?._id || chatId);
+                  return (
+                    <button
+                      key={chat._id}
+                      type="button"
+                      onClick={() => { if (otherUser) onSelectUser(otherUser); }}
+                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${isSelected ? "bg-brand-500/10 border border-brand-500/20" : "hover:bg-surface-800/50 border border-transparent"}`}
+                    >
+                      <Avatar src={otherUser?.avatar} name={otherUser?.name || "?"} size="md" status={isOnline ? "online" : "offline"} />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <h3 className="font-medium text-sm text-white truncate">{otherUser?.name || "Unknown"}</h3>
+                          <span className="text-[10px] text-surface-500 shrink-0">{getChatTime(chat)}</span>
+                        </div>
+                        <p className="text-xs text-surface-400 truncate mt-0.5">Archived</p>
+                      </div>
+                      {unread > 0 && (
+                        <span className="shrink-0 flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-surface-600 text-white text-[10px] font-bold">{unread > 99 ? "99+" : unread}</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )
           ) : (
             <div className="px-2 space-y-0.5">
               {filteredChats.map((chat) => {
@@ -282,6 +344,7 @@ const Sidebar = ({
                 const unread = unreadCounts?.[otherUser?._id || chatId] || 0;
                 const isOnline = otherUser ? allOnlineUsers.includes(otherUser._id) : false;
                 const isSelected = selectedUser?._id === (otherUser?._id || chatId);
+                const isPinned = pinnedChats.includes(chatId);
                 return (
                   <button
                     key={chat._id}
@@ -289,22 +352,18 @@ const Sidebar = ({
                     onClick={() => {
                       if (otherUser) onSelectUser(otherUser);
                     }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
-                      isSelected ? "bg-brand-500/10 border border-brand-500/20" : "hover:bg-surface-800/50 border border-transparent"
-                    }`}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${isSelected ? "bg-brand-500/10 border border-brand-500/20" : "hover:bg-surface-800/50 border border-transparent"} ${isPinned ? "opacity-90" : ""}`}
                   >
-                    <Avatar
-                      src={otherUser?.avatar}
-                      name={otherUser?.name || "?"}
-                      size="md"
-                      status={isOnline ? "online" : "offline"}
-                    />
+                    <Avatar src={otherUser?.avatar} name={otherUser?.name || "?"} size="md" status={isOnline ? "online" : "offline"} />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
                         <h3 className="font-medium text-sm text-white truncate">{otherUser?.name || "Unknown"}</h3>
                         <span className="text-[10px] text-surface-500 shrink-0">{getChatTime(chat)}</span>
                       </div>
-                      <p className="text-xs text-surface-500 truncate mt-0.5">{lastMessageText(chat)}</p>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        {isPinned && <span className="text-[10px] text-brand-400 shrink-0">📌</span>}
+                        <p className="text-xs text-surface-500 truncate">{lastMessageText(chat)}</p>
+                      </div>
                     </div>
                     {unread > 0 && (
                       <span className="shrink-0 flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-brand-500 text-white text-[10px] font-bold">
@@ -314,6 +373,23 @@ const Sidebar = ({
                   </button>
                 );
               })}
+              {archivedConversations.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setShowArchived(true)}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 hover:bg-surface-800/50 border border-transparent"
+                >
+                  <div className="w-11 h-11 rounded-full bg-surface-800 flex items-center justify-center shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4 text-surface-400">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-sm text-surface-300">Archived</h3>
+                    <p className="text-xs text-surface-500 mt-0.5">{archivedConversations.length} chat{archivedConversations.length > 1 ? "s" : ""}</p>
+                  </div>
+                </button>
+              )}
             </div>
           )
         )}
@@ -330,4 +406,4 @@ const Sidebar = ({
   );
 };
 
-export default Sidebar;
+export default memo(Sidebar);
