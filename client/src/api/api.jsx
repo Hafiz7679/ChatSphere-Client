@@ -1,10 +1,20 @@
 import axios from "axios";
 import { getCached, setCache, clearCache, CACHE_KEYS } from "../utils/cache";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || (() => {
+  const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+  if (!isLocalhost && !import.meta.env.VITE_API_URL) {
+    console.error(
+      "[API] VITE_API_URL is not set in production! API calls will fail.\n" +
+      "Set it in Vercel Dashboard → Project Settings → Environment Variables.\n" +
+      "Example: https://chatsphere-server.onrender.com/api"
+    );
+  }
+  return isLocalhost ? "http://localhost:5000/api" : "";
+})();
+
 const API = axios.create({
-  baseURL:
-    import.meta.env.VITE_API_URL ||
-    "http://localhost:5000/api",
+  baseURL: API_BASE_URL,
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
@@ -14,8 +24,9 @@ const API = axios.create({
 let csrfToken = null;
 
 const getCsrfToken = async () => {
+  if (!API_BASE_URL) return;
   try {
-    const { data } = await axios.get(`${API.defaults.baseURL}/csrf-token`, {
+    const { data } = await axios.get(`${API_BASE_URL}/csrf-token`, {
       withCredentials: true,
     });
     if (data?.csrfToken) csrfToken = data.csrfToken;
@@ -70,6 +81,12 @@ API.interceptors.response.use(
   async (error) => {
     const originalRequest = error?.config;
     if (!originalRequest) return Promise.reject(error);
+
+    if (error.response) {
+      console.debug(`[API] ${error.response.status} ${originalRequest.method?.toUpperCase()} ${originalRequest.url}`, error.response.data);
+    } else if (error.request) {
+      console.error(`[API] No response received: ${originalRequest.method?.toUpperCase()} ${originalRequest.url} — ${error.message}`);
+    }
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {

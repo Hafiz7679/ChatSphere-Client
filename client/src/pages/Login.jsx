@@ -36,7 +36,9 @@ const Login = () => {
       localStorage.setItem("token", response.data.token);
       navigate("/chat");
     } catch (error) {
-      const msg = error.response?.data?.message || "Login failed";
+      const serverMsg = error.response?.data?.message;
+      const isNetworkError = !error.response && error.request;
+      const msg = serverMsg || (isNetworkError ? "Cannot reach server. Check your internet connection or the server may be offline." : "Login failed");
       toast.error(msg);
       if (msg.includes("verify your email")) {
         setShowVerifyPrompt(true);

@@ -1,8 +1,16 @@
 import { io } from "socket.io-client";
 
-const SOCKET_URL =
-  import.meta.env.VITE_SOCKET_URL ||
-  "http://localhost:5000";
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || (() => {
+  const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+  if (!isLocalhost && !import.meta.env.VITE_SOCKET_URL) {
+    console.error(
+      "[Socket] VITE_SOCKET_URL is not set in production! Socket connection will fail.\n" +
+      "Set it in Vercel Dashboard → Project Settings → Environment Variables.\n" +
+      "Example: https://chatsphere-server.onrender.com"
+    );
+  }
+  return isLocalhost ? "http://localhost:5000" : "";
+})();
 
 const createSocket = () => {
   const token = (() => {

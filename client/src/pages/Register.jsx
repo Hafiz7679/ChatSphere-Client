@@ -50,7 +50,9 @@ const Register = () => {
       toast.success(response.data.message);
       navigate("/login");
     } catch (error) {
-      toast.error(error.response?.data?.message || "Registration failed");
+      const serverMsg = error.response?.data?.message;
+      const isNetworkError = !error.response && error.request;
+      toast.error(serverMsg || (isNetworkError ? "Cannot reach server. Check your internet connection or the server may be offline." : "Registration failed"));
     } finally {
       setLoading(false);
     }
