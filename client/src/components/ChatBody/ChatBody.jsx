@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { formatTime, formatDate, shouldShowDateSeparator } from "../../utils/helpers";
 import MessageActions from "../MessageActions/MessageActions";
+import MessageReactions from "../MessageReactions/MessageReactions";
 import useChatStore from "../../store/useChatStore";
+import { reactToMessage } from "../../api/api";
 import ImageViewer from "../ImageViewer/ImageViewer";
 import ScrollToBottom from "../ScrollToBottom/ScrollToBottom";
 
@@ -148,6 +150,7 @@ const ChatBody = ({ messages, currentUser, loading, selectedUser, onReplyMessage
       useChatStore.getState().updateMessage(msgId, { reactions: updated });
       socket?.emit("message_reacted", { messageId: msgId, chatId: activeChat?._id, emoji, remove: false, senderId: selectedUser?._id });
     }
+    reactToMessage(msgId, emoji).catch(() => {});
     setShowReactions(null);
     setMenuState(null);
   };
@@ -257,11 +260,9 @@ const ChatBody = ({ messages, currentUser, loading, selectedUser, onReplyMessage
                         {isOwn && <StatusIcon status={message.status} />}
                       </div>
                     </div>
-                    {summary.length > 0 && (
-                      <div className={`flex flex-wrap gap-0.5 -mt-2 ${isOwn ? "justify-end" : "justify-start"}`}>
-                        <div className="inline-flex gap-0.5 px-1.5 py-0.5 rounded-full bg-surface-800 border border-surface-700/50 shadow-sm">
-                          {summary.map((r) => <span key={r.emoji} className="text-sm leading-none">{r.emoji}</span>)}
-                        </div>
+                    {reactions.length > 0 && (
+                      <div className={`${isOwn ? "text-right" : "text-left"} -mt-1`}>
+                        <MessageReactions reactions={reactions} messageId={message._id} onReact={(emoji) => handleReact(message, emoji)} />
                       </div>
                     )}
                     <button

@@ -125,6 +125,7 @@ export const sendMessage = (data) => API.post("/messages/send", data);
 export const deleteMessage = (messageId) => API.delete(`/messages/${messageId}`);
 export const editMessage = (messageId, text) => API.put(`/messages/${messageId}`, { text });
 export const markAsRead = (chatId) => API.put("/messages/read/mark", { chatId });
+export const reactToMessage = (messageId, emoji) => API.post(`/messages/${messageId}/react`, { emoji });
 export const getChatMedia = (chatId, params) =>
   API.get(`/messages/media/${chatId}`, { params });
 
