@@ -6,6 +6,7 @@ import useChatStore from "../store/useChatStore";
 import useSocket from "../hooks/useSocket";
 import useMessageSync from "../hooks/useMessageSync";
 import useTheme from "../hooks/useTheme";
+import usePushNotifications from "../hooks/usePushNotifications";
 import Sidebar from "../components/Sidebar/Sidebar";
 import ChatHeader from "../components/ChatHeader/ChatHeader";
 import ChatBody from "../components/ChatBody/ChatBody";
@@ -67,6 +68,7 @@ const Chat = () => {
 
   useSocket();
   useMessageSync();
+  usePushNotifications();
   const { theme } = useTheme();
 
   useEffect(() => { activeChatRef.current = activeChat; }, [activeChat]);
