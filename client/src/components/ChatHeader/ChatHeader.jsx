@@ -1,6 +1,6 @@
 import Avatar from "../Avatar/Avatar";
 
-const ChatHeader = ({ selectedUser, isTyping, onlineUsers, onBack, onAudioCall, onVideoCall }) => {
+const ChatHeader = ({ selectedUser, isTyping, onlineUsers, onBack, onAudioCall, onVideoCall, onMediaGallery }) => {
   if (!selectedUser) return null;
   const isOnline = onlineUsers.includes(selectedUser._id);
 
@@ -36,6 +36,16 @@ const ChatHeader = ({ selectedUser, isTyping, onlineUsers, onBack, onAudioCall, 
         </div>
       </div>
       <div className="flex items-center gap-1 shrink-0">
+        <button
+          type="button"
+          onClick={onMediaGallery}
+          className="w-9 h-9 rounded-xl flex items-center justify-center text-surface-400 hover:text-brand-400 hover:bg-surface-800 transition"
+          title="Media Gallery"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
+          </svg>
+        </button>
         <button
           type="button"
           onClick={onAudioCall}

@@ -19,6 +19,7 @@ import ConnectingCallUI from "../components/CallUI/ConnectingCallUI";
 import EmptyState from "../components/EmptyState/EmptyState";
 import Loader from "../components/Loader/Loader";
 import GifPicker from "../components/GifPicker/GifPicker";
+import MediaGallery from "../components/MediaGallery/MediaGallery";
 import toast from "react-hot-toast";
 
 const Chat = () => {
@@ -38,6 +39,7 @@ const Chat = () => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [dragOver, setDragOver] = useState(false);
+  const [showMediaGallery, setShowMediaGallery] = useState(false);
 
   const callActionsRef = useRef({});
   const activeChatRef = useRef(null);
@@ -480,6 +482,7 @@ const Chat = () => {
                   onBack={handleBack}
                   onAudioCall={handleAudioCall}
                   onVideoCall={handleVideoCall}
+                  onMediaGallery={() => setShowMediaGallery(true)}
                 />
                 <ChatBody
                   messages={messages}
@@ -536,6 +539,13 @@ const Chat = () => {
       )}
 
       <CallHandler actionRef={callActionsRef} />
+
+      {showMediaGallery && activeChat && (
+        <MediaGallery
+          chatId={activeChat._id || activeChat.chat?._id}
+          onClose={() => setShowMediaGallery(false)}
+        />
+      )}
 
       {callData?.type === "incoming" && callStatus === "ringing" && (
         <IncomingCallModal
