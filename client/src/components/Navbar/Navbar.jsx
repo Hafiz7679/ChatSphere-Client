@@ -13,7 +13,7 @@ const Navbar = () => {
   return (
     <header className="fixed top-0 left-0 w-full z-50 backdrop-blur-xl bg-navy-900/80 border-b border-surface-700/20">
 
-      <div className="max-w-7xl mx-auto flex items-center justify-between px-5 md:px-8 py-4">
+      <div className="max-w-7xl mx-auto flex items-center justify-between px-4 md:px-8 py-2.5 md:py-4">
 
         <Link to="/" className="flex items-center gap-3">
           <Logo />
@@ -50,17 +50,17 @@ const Navbar = () => {
 
       {menuOpen && (
         <div className="lg:hidden bg-navy-800/95 backdrop-blur-xl border-t border-surface-700/20">
-          <div className="flex flex-col p-6 gap-6">
-            <a href="#features" onClick={closeMenu} className="text-white">Features</a>
-            <a href="#about" onClick={closeMenu} className="text-white">About</a>
-            <a href="#tech" onClick={closeMenu} className="text-white">Tech Stack</a>
-            <a href="#contact" onClick={closeMenu} className="text-white">Contact</a>
-            <Link to="/admin/login" onClick={closeMenu} className="flex items-center gap-2 text-surface-400 hover:text-brand-300 transition">
+          <div className="flex flex-col px-5 py-5 md:p-6 gap-5 md:gap-6">
+            <a href="#features" onClick={closeMenu} className="text-sm md:text-base text-white">Features</a>
+            <a href="#about" onClick={closeMenu} className="text-sm md:text-base text-white">About</a>
+            <a href="#tech" onClick={closeMenu} className="text-sm md:text-base text-white">Tech Stack</a>
+            <a href="#contact" onClick={closeMenu} className="text-sm md:text-base text-white">Contact</a>
+            <Link to="/admin/login" onClick={closeMenu} className="flex items-center gap-2 text-sm text-surface-400 hover:text-brand-300 transition">
               <HiShieldCheck className="w-4 h-4" />
               Admin Login
             </Link>
-            <Link to="/login" onClick={closeMenu} className="text-white">Login</Link>
-            <Link to="/register" onClick={closeMenu} className="bg-gradient-to-r from-brand-600 to-accent-600 text-white rounded-xl py-3 text-center font-semibold">Get Started</Link>
+            <Link to="/login" onClick={closeMenu} className="text-sm md:text-base text-white">Login</Link>
+            <Link to="/register" onClick={closeMenu} className="bg-gradient-to-r from-brand-600 to-accent-600 text-white rounded-xl py-2.5 md:py-3 text-sm md:text-base text-center font-semibold">Get Started</Link>
           </div>
         </div>
       )}

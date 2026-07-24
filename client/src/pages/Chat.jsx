@@ -491,7 +491,7 @@ const Chat = () => {
 
       {!isCallActive && (
         <>
-          <div className={`${mobileChatOpen ? "hidden md:flex" : "flex"} w-full md:w-[380px] md:min-w-[320px] h-full`}>
+          <div className={`${mobileChatOpen ? "hidden md:flex" : "flex"} w-full md:w-[340px] lg:w-[380px] md:min-w-[280px] lg:min-w-[320px] h-full`}>
             <Sidebar
               users={users}
               usersLoading={usersLoading}

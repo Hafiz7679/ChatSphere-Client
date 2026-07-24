@@ -193,7 +193,7 @@ const MessageInput = ({ selectedUser, replyTo, onClearReply, onGifClick }) => {
   }, []);
 
   return (
-    <div className="px-4 md:px-6 pt-2 pb-4 bg-navy-900 border-t border-surface-700/30">
+    <div className="px-3 md:px-6 pt-2 pb-3 md:pb-4 bg-navy-900 border-t border-surface-700/30">
       <SmartReply messages={smartReplyMessages} currentUser={currentUser} onSelectReply={handleSmartReply} />
       {replyTo && (
         <div className="flex items-center gap-3 mb-2.5 bg-surface-800/50 rounded-xl px-4 py-2.5 border border-surface-700/30 animate-slide-up">
@@ -211,38 +211,38 @@ const MessageInput = ({ selectedUser, replyTo, onClearReply, onGifClick }) => {
       )}
       {attachedFile && <div className="mb-2.5"><FilePreview file={attachedFile} onRemove={() => setAttachedFile(null)} /></div>}
       {showVoice && <div className="mb-2.5"><Suspense fallback={null}><VoiceRecorder onSend={handleVoiceSend} onCancel={() => setShowVoice(false)} /></Suspense></div>}
-      <div className={`flex items-end gap-2 bg-surface-800/50 border border-surface-700/30 rounded-2xl px-3 py-1.5 transition-all focus-within:border-brand-500/50 focus-within:ring-2 focus-within:ring-brand-500/15 ${uploading ? "border-brand-500/50" : ""}`}>
-        <button type="button" onClick={() => setShowEmoji(!showEmoji)} className="shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-surface-400 hover:text-white hover:bg-surface-700/50 transition">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
+      <div className={`flex items-end gap-1 md:gap-2 bg-surface-800/50 border border-surface-700/30 rounded-2xl px-2 md:px-3 py-1 transition-all focus-within:border-brand-500/50 focus-within:ring-2 focus-within:ring-brand-500/15 ${uploading ? "border-brand-500/50" : ""}`}>
+        <button type="button" onClick={() => setShowEmoji(!showEmoji)} className="shrink-0 w-8 h-8 md:w-9 md:h-9 rounded-xl flex items-center justify-center text-surface-400 hover:text-white hover:bg-surface-700/50 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5 md:w-4 md:h-4">
             <circle cx="12" cy="12" r="9" /><path strokeLinecap="round" d="M8.5 14.5s1.5 2 3.5 2 3.5-2 3.5-2" /><path strokeLinecap="round" d="M9 9h.01M15 9h.01" />
           </svg>
         </button>
         {showEmoji && <EmojiPicker onSelect={(e) => { setMessage((p) => p + e); setShowEmoji(false); textareaRef.current?.focus(); }} onClose={() => setShowEmoji(false)} />}
-        <button type="button" onClick={onGifClick} className="shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-surface-400 hover:text-white hover:bg-surface-700/50 transition">
-          <span className="text-base font-bold">GIF</span>
+        <button type="button" onClick={onGifClick} className="shrink-0 w-8 h-8 md:w-9 md:h-9 rounded-xl flex items-center justify-center text-surface-400 hover:text-white hover:bg-surface-700/50 transition">
+          <span className="text-xs md:text-base font-bold">GIF</span>
         </button>
-        <button type="button" onClick={() => fileInputRef.current?.click()} className="shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-surface-400 hover:text-white hover:bg-surface-700/50 transition">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
+        <button type="button" onClick={() => fileInputRef.current?.click()} className="shrink-0 w-8 h-8 md:w-9 md:h-9 rounded-xl flex items-center justify-center text-surface-400 hover:text-white hover:bg-surface-700/50 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5 md:w-4 md:h-4">
             <path strokeLinecap="round" strokeLinejoin="round" d="M21.44 11.05l-9.19 9.19a5 5 0 01-7.07-7.07l9.19-9.19a3.5 3.5 0 014.95 4.95l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
           </svg>
         </button>
         <input ref={fileInputRef} type="file" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) { if (f.size > 50 * 1024 * 1024) { alert("File too large. Max 50MB."); return; } setAttachedFile(f); } }} />
         <textarea ref={textareaRef} rows={1} placeholder="Type a message" value={message} onChange={handleTyping} onKeyDown={handleKeyDown}
           inputMode="text" enterKeyHint="send" autoComplete="off"
-          className="flex-1 resize-none bg-transparent outline-none text-sm py-2 px-1 max-h-32 leading-relaxed text-white placeholder:text-surface-500" />
+          className="flex-1 resize-none bg-transparent outline-none text-sm py-1.5 md:py-2 px-0.5 md:px-1 max-h-32 leading-relaxed text-white placeholder:text-surface-500 placeholder:text-xs md:placeholder:text-sm" />
         {!message.trim() && !attachedFile && (
-          <button type="button" onClick={() => setShowVoice(true)} className="shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-surface-400 hover:text-white hover:bg-surface-700/50 transition">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
+          <button type="button" onClick={() => setShowVoice(true)} className="shrink-0 w-8 h-8 md:w-9 md:h-9 rounded-xl flex items-center justify-center text-surface-400 hover:text-white hover:bg-surface-700/50 transition">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5 md:w-4 md:h-4">
               <rect x="9" y="2" width="6" height="12" rx="3" /><path strokeLinecap="round" d="M5 11a7 7 0 0014 0M12 18v4" />
             </svg>
           </button>
         )}
         <button type="button" onClick={handleSend} disabled={(!message.trim() && !attachedFile) || sending || uploading}
-          className="shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-accent-500 text-white flex items-center justify-center shadow-lg shadow-brand-500/25 hover:shadow-brand-500/40 active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed">
+          className="shrink-0 w-9 h-9 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-brand-500 to-accent-500 text-white flex items-center justify-center shadow-lg shadow-brand-500/25 hover:shadow-brand-500/40 active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed">
           {uploading ? (
-            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            <div className="w-3.5 h-3.5 md:w-4 md:h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
           ) : (
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4 translate-x-[1px]">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5 md:w-4 md:h-4 translate-x-[1px]">
               <path strokeLinecap="round" strokeLinejoin="round" d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
             </svg>
           )}

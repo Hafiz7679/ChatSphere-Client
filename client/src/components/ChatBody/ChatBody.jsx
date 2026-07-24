@@ -77,7 +77,7 @@ const AudioPlayer = ({ src, duration: attDuration, isOwn }) => {
   };
 
   return (
-    <div className={`flex items-center gap-2 p-2 rounded-xl ${isOwn ? "bg-brand-500/20" : "bg-surface-700/50"} min-w-[200px]`}>
+      <div className={`flex items-center gap-2 p-2 rounded-xl ${isOwn ? "bg-brand-500/20" : "bg-surface-700/50"} min-w-[160px] md:min-w-[200px]`}>
       <button type="button" onClick={togglePlay} className="w-8 h-8 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20 shrink-0">
         {playing ? (
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
@@ -180,7 +180,7 @@ const ChatBody = ({ messages, currentUser, loading, selectedUser, onReplyMessage
   const wallpaperStyle = useMemo(() => chatWallpaper ? { backgroundImage: `url(${chatWallpaper})`, backgroundSize: "cover", backgroundPosition: "center" } : {}, [chatWallpaper]);
 
   return (
-    <div ref={containerRef} className="flex-1 overflow-y-auto px-4 md:px-8 py-5 bg-navy-950 bg-grid" style={wallpaperStyle}>
+    <div ref={containerRef} className="flex-1 overflow-y-auto px-3 md:px-8 py-3 md:py-5 bg-navy-950 bg-grid" style={wallpaperStyle}>
       {loading ? (
         <div className="space-y-3 max-w-3xl mx-auto">
           {Array.from({ length: 5 }).map((_, i) => (
@@ -216,7 +216,7 @@ const ChatBody = ({ messages, currentUser, loading, selectedUser, onReplyMessage
                   </div>
                 )}
                 <div className={`relative flex items-end gap-2 mb-1 ${isOwn ? "justify-end" : "justify-start"}`}>
-                  <div className="group relative max-w-[75%] sm:max-w-xs md:max-w-sm">
+                  <div className="group relative max-w-[80%] md:max-w-[65%]">
                     {message.replyTo && (
                       <div className={`${isOwn ? "bg-brand-700/50" : "bg-surface-800"} rounded-t-xl px-4 pt-2.5 pb-1`}>
                         <p className="text-[10px] font-medium text-surface-400 uppercase tracking-wider">Reply</p>

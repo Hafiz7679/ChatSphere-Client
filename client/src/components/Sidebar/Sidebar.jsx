@@ -110,23 +110,23 @@ const Sidebar = ({
 
   return (
     <div className="flex flex-col w-full h-full bg-navy-900 border-r border-surface-700/30">
-      <div className="px-5 pt-5 pb-3 border-b border-surface-700/20">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-accent-500 flex items-center justify-center shadow-lg shadow-brand-500/30">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" className="w-4 h-4">
+      <div className="px-4 md:px-5 pt-4 md:pt-5 pb-2 md:pb-3 border-b border-surface-700/20">
+        <div className="flex items-center justify-between mb-3 md:mb-4">
+          <div className="flex items-center gap-2 md:gap-2.5">
+            <div className="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-gradient-to-br from-brand-500 to-accent-500 flex items-center justify-center shadow-lg shadow-brand-500/30">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" className="w-3.5 h-3.5 md:w-4 md:h-4">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8-1.06 0-2.077-.163-3.02-.463L3 21l1.395-3.72C3.512 16.014 3 14.56 3 13c0-4.418 4.03-8 9-8s9 3.582 9 7z" />
               </svg>
             </div>
-            <span className="text-base font-bold text-white tracking-tight">ChatSphere</span>
+            <span className="text-sm md:text-base font-bold text-white tracking-tight">ChatSphere</span>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5 md:gap-1">
             <button
               type="button"
               onClick={() => setShowCreateGroup(true)}
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-surface-400 hover:text-white hover:bg-surface-800 transition"
+              className="w-7 h-7 md:w-8 md:h-8 rounded-lg flex items-center justify-center text-surface-400 hover:text-white hover:bg-surface-800 transition"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5 md:w-4 md:h-4">
                 <path strokeLinecap="round" d="M12 5v14M5 12h14" />
               </svg>
             </button>
@@ -134,9 +134,9 @@ const Sidebar = ({
               <button
                 type="button"
                 onClick={() => navigate("/admin")}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-brand-400 hover:text-brand-300 hover:bg-brand-500/10 transition"
+                className="w-7 h-7 md:w-8 md:h-8 rounded-lg flex items-center justify-center text-brand-400 hover:text-brand-300 hover:bg-brand-500/10 transition"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5 md:w-4 md:h-4">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
               </button>
@@ -144,7 +144,7 @@ const Sidebar = ({
             <button
               type="button"
               onClick={() => navigate("/profile")}
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-surface-400 hover:text-white hover:bg-surface-800 transition"
+              className="w-7 h-7 md:w-8 md:h-8 rounded-lg flex items-center justify-center text-surface-400 hover:text-white hover:bg-surface-800 transition"
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
                 <circle cx="12" cy="8" r="4" />
@@ -155,7 +155,7 @@ const Sidebar = ({
           </div>
         </div>
         <div className="relative">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-surface-500 pointer-events-none">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5 md:w-4 md:h-4 absolute left-3 md:left-3.5 top-1/2 -translate-y-1/2 text-surface-500 pointer-events-none">
             <circle cx="11" cy="11" r="7" />
             <path strokeLinecap="round" d="m21 21-4.3-4.3" />
           </svg>
@@ -164,16 +164,16 @@ const Sidebar = ({
             placeholder="Search conversations..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-surface-800/50 border border-surface-700/30 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder:text-surface-500 outline-none focus:border-brand-500/50 focus:ring-2 focus:ring-brand-500/15 transition-all"
+            className="w-full bg-surface-800/50 border border-surface-700/30 rounded-xl pl-9 md:pl-10 pr-3 md:pr-4 py-2 md:py-2.5 text-xs md:text-sm text-white placeholder:text-surface-500 outline-none focus:border-brand-500/50 focus:ring-2 focus:ring-brand-500/15 transition-all"
           />
         </div>
-        <div className="flex gap-1 mt-3">
+        <div className="flex gap-1 mt-2 md:mt-3">
           {["chats", "users", "groups"].map((t) => (
             <button
               key={t}
               type="button"
               onClick={() => setTab(t)}
-              className={`flex-1 py-1.5 text-xs font-medium rounded-lg capitalize transition-all ${
+              className={`flex-1 py-1 md:py-1.5 text-[10px] md:text-xs font-medium rounded-lg capitalize transition-all ${
                 tab === t
                   ? "bg-brand-500/15 text-brand-300 border border-brand-500/20"
                   : "text-surface-400 hover:text-surface-300"
@@ -187,10 +187,10 @@ const Sidebar = ({
 
       <div className="flex-1 overflow-y-auto py-2">
         {usersLoading ? (
-          <div className="px-5 space-y-2">
+          <div className="px-4 md:px-5 space-y-1 md:space-y-2">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-3 px-3 py-3 rounded-xl">
-                <div className="w-11 h-11 rounded-full bg-surface-800 animate-pulse shrink-0" />
+              <div key={i} className="flex items-center gap-2.5 md:gap-3 px-2 md:px-3 py-2.5 md:py-3 rounded-xl">
+                <div className="w-9 h-9 md:w-11 md:h-11 rounded-full bg-surface-800 animate-pulse shrink-0" />
                 <div className="flex-1 space-y-2">
                   <div className="h-3 w-2/3 bg-surface-800 rounded animate-pulse" />
                   <div className="h-2.5 w-1/2 bg-surface-800/50 rounded animate-pulse" />
@@ -222,11 +222,11 @@ const Sidebar = ({
                     key={chat._id}
                     type="button"
                     onClick={() => onSelectUser({ _id: chat._id, name: chat.chatName || "Group", isGroup: true, chat })}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
+                    className={`w-full flex items-center gap-2.5 md:gap-3 px-3 md:px-4 py-2.5 md:py-3 rounded-xl text-left transition-all duration-200 ${
                       selectedUser?._id === chat._id ? "bg-brand-500/10 border border-brand-500/20" : "hover:bg-surface-800/50 border border-transparent"
                     }`}
                   >
-                    <Avatar name={chat.chatName || "G"} size="md" />
+                    <Avatar name={chat.chatName || "G"} size="sm" />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
                         <h3 className="font-medium text-sm text-white truncate">{chat.chatName}</h3>
@@ -266,11 +266,11 @@ const Sidebar = ({
                     key={user._id}
                     type="button"
                     onClick={() => onSelectUser(user)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
+                    className={`w-full flex items-center gap-2.5 md:gap-3 px-3 md:px-4 py-2.5 md:py-3 rounded-xl text-left transition-all duration-200 ${
                       isSelected ? "bg-brand-500/10 border border-brand-500/20" : "hover:bg-surface-800/50 border border-transparent"
                     }`}
                   >
-                    <Avatar src={user.avatar} name={user.name} size="md" status={isOnline ? "online" : "offline"} />
+                    <Avatar src={user.avatar} name={user.name} size="sm" status={isOnline ? "online" : "offline"} />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
                         <h3 className="font-medium text-sm text-white truncate">{user.name}</h3>
@@ -318,9 +318,9 @@ const Sidebar = ({
                       key={chat._id}
                       type="button"
                       onClick={() => { if (otherUser) onSelectUser(otherUser); }}
-                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${isSelected ? "bg-brand-500/10 border border-brand-500/20" : "hover:bg-surface-800/50 border border-transparent"}`}
+                      className={`w-full flex items-center gap-2.5 md:gap-3 px-3 md:px-4 py-2.5 md:py-3 rounded-xl text-left transition-all duration-200 ${isSelected ? "bg-brand-500/10 border border-brand-500/20" : "hover:bg-surface-800/50 border border-transparent"}`}
                     >
-                      <Avatar src={otherUser?.avatar} name={otherUser?.name || "?"} size="md" status={isOnline ? "online" : "offline"} />
+                      <Avatar src={otherUser?.avatar} name={otherUser?.name || "?"} size="sm" status={isOnline ? "online" : "offline"} />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2">
                           <h3 className="font-medium text-sm text-white truncate">{otherUser?.name || "Unknown"}</h3>
@@ -352,9 +352,9 @@ const Sidebar = ({
                     onClick={() => {
                       if (otherUser) onSelectUser(otherUser);
                     }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${isSelected ? "bg-brand-500/10 border border-brand-500/20" : "hover:bg-surface-800/50 border border-transparent"} ${isPinned ? "opacity-90" : ""}`}
+                    className={`w-full flex items-center gap-2.5 md:gap-3 px-3 md:px-4 py-2.5 md:py-3 rounded-xl text-left transition-all duration-200 ${isSelected ? "bg-brand-500/10 border border-brand-500/20" : "hover:bg-surface-800/50 border border-transparent"} ${isPinned ? "opacity-90" : ""}`}
                   >
-                    <Avatar src={otherUser?.avatar} name={otherUser?.name || "?"} size="md" status={isOnline ? "online" : "offline"} />
+                    <Avatar src={otherUser?.avatar} name={otherUser?.name || "?"} size="sm" status={isOnline ? "online" : "offline"} />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
                         <h3 className="font-medium text-sm text-white truncate">{otherUser?.name || "Unknown"}</h3>
@@ -377,9 +377,9 @@ const Sidebar = ({
                 <button
                   type="button"
                   onClick={() => setShowArchived(true)}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 hover:bg-surface-800/50 border border-transparent"
+                  className="w-full flex items-center gap-2.5 md:gap-3 px-3 md:px-4 py-2.5 md:py-3 rounded-xl text-left transition-all duration-200 hover:bg-surface-800/50 border border-transparent"
                 >
-                  <div className="w-11 h-11 rounded-full bg-surface-800 flex items-center justify-center shrink-0">
+                  <div className="w-9 h-9 md:w-11 md:h-11 rounded-full bg-surface-800 flex items-center justify-center shrink-0">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4 text-surface-400">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                     </svg>
@@ -397,7 +397,7 @@ const Sidebar = ({
 
       {showCreateGroup && <CreateGroupModal users={users} onClose={() => setShowCreateGroup(false)} />}
 
-      <div className="px-5 py-3 border-t border-surface-700/20">
+      <div className="px-4 md:px-5 py-2 md:py-3 border-t border-surface-700/20">
         <p className="text-[10px] text-surface-500 text-center tracking-wider">
           Powered by <span className="text-surface-400 font-medium">Hafiz</span>
         </p>
