@@ -1,0 +1,246 @@
+import { lazy, memo, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { X, Smile, Paperclip, Mic, Send } from "lucide-react";
+import { getSocket } from "../../socket/socket";
+import { sendMessage, uploadFile, getChats } from "../../api/api";
+import useChatStore from "../../store/useChatStore";
+import EmojiPicker from "../EmojiPicker/EmojiPicker";
+import FilePreview from "../FilePreview/FilePreview";
+import SmartReply from "../SmartReply/SmartReply";
+import { debounce } from "../../utils/helpers";
+
+const VoiceRecorder = lazy(() => import("../VoiceRecorder/VoiceRecorder"));
+
+const emitTyping = debounce((socket, sender, receiver) => {
+  socket.emit("typing", { sender, receiver });
+}, 300);
+
+const emitStopTyping = debounce((socket, sender, receiver) => {
+  socket.emit("stop_typing", { sender, receiver });
+}, 2000);
+
+const MessageInput = ({ selectedUser, replyTo, onClearReply, onGifClick }) => {
+  const [message, setMessage] = useState("");
+  const [sending, setSending] = useState(false);
+  const [showEmoji, setShowEmoji] = useState(false);
+  const [attachedFile, setAttachedFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [showVoice, setShowVoice] = useState(false);
+  const textareaRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const currentUser = JSON.parse(localStorage.getItem("user") || "null");
+
+  const resizeTextarea = useCallback(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
+  }, []);
+
+  const handleTyping = useCallback(
+    (e) => {
+      const value = e.target.value;
+      setMessage(value);
+      resizeTextarea();
+      const socket = getSocket();
+      if (!value.trim()) {
+        emitTyping.cancel();
+        emitStopTyping.cancel();
+        socket.emit("stop_typing", { sender: currentUser._id, receiver: selectedUser._id });
+        return;
+      }
+      emitTyping(socket, currentUser._id, selectedUser._id);
+      emitStopTyping(socket, currentUser._id, selectedUser._id);
+    },
+    [currentUser, selectedUser, resizeTextarea]
+  );
+
+  const handleSend = useCallback(async () => {
+    if ((!message.trim() && !attachedFile) || sending || uploading) return;
+    try {
+      setSending(true);
+      let attachmentData = null;
+      if (attachedFile) {
+        setUploading(true);
+        const fd = new FormData();
+        fd.append("file", attachedFile);
+        const res = await uploadFile(fd);
+        attachmentData = res.data.data;
+        setUploading(false);
+      }
+      const msgData = {
+        sender: currentUser._id,
+        receiver: selectedUser._id,
+        ...(message.trim() && { text: message.trim() }),
+        ...(replyTo && { replyTo: replyTo._id }),
+        ...(attachmentData && { attachments: [{ url: attachmentData.url, type: attachmentData.type, name: attachmentData.name, size: attachmentData.size }] }),
+      };
+      // Create temporary local message for better UX
+      const tempId = `temp-${Date.now()}`;
+      const tempMsg = {
+        _id: tempId,
+        sender: { _id: currentUser._id, name: currentUser.name, avatar: currentUser.avatar },
+        content: message.trim() || "",
+        text: message.trim() || "",
+        attachments: msgData.attachments || [],
+        chat: selectedUser._id,
+        status: "sending",
+        createdAt: new Date().toISOString(),
+        replyTo: replyTo || null,
+        receiver: selectedUser._id,
+      };
+      useChatStore.getState().addMessage(tempMsg);
+
+      const response = await sendMessage(msgData);
+      getSocket().emit("send_message", response.data.data);
+      emitTyping.cancel();
+      emitStopTyping.cancel();
+      getSocket().emit("stop_typing", { sender: currentUser._id, receiver: selectedUser._id });
+      // Refresh chats if this created a new conversation
+      const chatId = response.data.data?.chat?._id || response.data.data?.chat;
+      const currentChats = useChatStore.getState().chats;
+      if (chatId && !currentChats.some((c) => c._id === chatId)) {
+        getChats().then((res) => {
+          if (res.data?.data) useChatStore.getState().setChats(res.data.data);
+        }).catch(() => {});
+      }
+      setMessage("");
+      setAttachedFile(null);
+      if (onClearReply) onClearReply();
+      useChatStore.getState().replaceTempMessage(tempId, response.data.data);
+      requestAnimationFrame(resizeTextarea);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setSending(false);
+      setUploading(false);
+    }
+  }, [message, attachedFile, sending, uploading, currentUser, selectedUser, replyTo, onClearReply, resizeTextarea]);
+
+  const handleKeyDown = useCallback((e) => {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
+  }, [handleSend]);
+
+  const handleVoiceSend = useCallback(async (blob, duration) => {
+    try {
+      setSending(true);
+      setShowVoice(false);
+      const fd = new FormData();
+      fd.append("voice", blob, `voice-${Date.now()}.webm`);
+      const { default: api } = await import("../../api/api");
+      const uploadRes = await api.post("/upload/voice", fd, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      const attachData = [{
+        url: uploadRes.data.data.url,
+        type: "audio/webm",
+        name: "Voice message",
+        size: blob.size,
+        duration: uploadRes.data.data.duration || duration,
+      }];
+      const msgData = {
+        sender: currentUser._id,
+        receiver: selectedUser._id,
+        text: "",
+        attachments: attachData,
+      };
+      // Temp local message for instant feedback
+      const tempId = `temp-${Date.now()}`;
+      const tempMsg = {
+        _id: tempId,
+        sender: { _id: currentUser._id, name: currentUser.name, avatar: currentUser.avatar },
+        content: "",
+        text: "",
+        attachments: attachData,
+        chat: selectedUser._id,
+        status: "sending",
+        createdAt: new Date().toISOString(),
+        receiver: selectedUser._id,
+      };
+      useChatStore.getState().addMessage(tempMsg);
+
+      const response = await sendMessage(msgData);
+      getSocket().emit("send_message", response.data.data);
+      useChatStore.getState().replaceTempMessage(tempId, response.data.data);
+      const chatId = response.data.data?.chat?._id || response.data.data?.chat;
+      const currentChats = useChatStore.getState().chats;
+      if (chatId && !currentChats.some((c) => c._id === chatId)) {
+        getChats().then((res) => {
+          if (res.data?.data) useChatStore.getState().setChats(res.data.data);
+        }).catch(() => {});
+      }
+    } catch (error) {
+      console.error("Voice send error:", error);
+    } finally {
+      setSending(false);
+    }
+  }, [currentUser, selectedUser]);
+
+  useEffect(() => {
+    return () => {
+      emitTyping.cancel();
+      emitStopTyping.cancel();
+      if (selectedUser && currentUser) {
+        getSocket().emit("stop_typing", { sender: currentUser._id, receiver: selectedUser._id });
+      }
+    };
+  }, [selectedUser, currentUser]);
+
+  const messages = useChatStore((s) => s.messages);
+  const smartReplyMessages = useMemo(() => messages.slice(-20), [messages]);
+
+  const handleSmartReply = useCallback((text) => {
+    setMessage(text);
+    textareaRef.current?.focus();
+  }, []);
+
+  return (
+    <div className="px-3 md:px-6 pt-2 pb-3 md:pb-4 bg-navy-900 border-t border-surface-700/30">
+      <SmartReply messages={smartReplyMessages} currentUser={currentUser} onSelectReply={handleSmartReply} />
+      {replyTo && (
+        <div className="flex items-center gap-3 mb-2.5 bg-surface-800/50 rounded-xl px-4 py-2.5 border border-surface-700/30 animate-slide-up">
+          <div className="w-0.5 h-9 rounded-full bg-brand-500 shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-[11px] font-medium text-brand-400 uppercase tracking-wider">Reply</p>
+            <p className="text-xs text-surface-400 truncate mt-0.5">{replyTo.content || replyTo.text || ""}</p>
+          </div>
+          <button type="button" onClick={onClearReply} className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-surface-500 hover:text-white hover:bg-surface-700 transition">
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+      {attachedFile && <div className="mb-2.5"><FilePreview file={attachedFile} onRemove={() => setAttachedFile(null)} /></div>}
+      {showVoice && <div className="mb-2.5"><Suspense fallback={null}><VoiceRecorder onSend={handleVoiceSend} onCancel={() => setShowVoice(false)} /></Suspense></div>}
+      <div className={`flex items-end gap-1 md:gap-2 bg-surface-800/50 border border-surface-700/30 rounded-2xl px-2 md:px-3 py-1 transition-all focus-within:border-brand-500/50 focus-within:ring-2 focus-within:ring-brand-500/15 ${uploading ? "border-brand-500/50" : ""}`}>
+        <button type="button" onClick={() => setShowEmoji(!showEmoji)} className="shrink-0 w-8 h-8 md:w-9 md:h-9 rounded-xl flex items-center justify-center text-surface-400 hover:text-white hover:bg-surface-700/50 transition">
+          <Smile className="w-3.5 h-3.5 md:w-4 md:h-4" />
+        </button>
+        {showEmoji && <EmojiPicker onSelect={(e) => { setMessage((p) => p + e); setShowEmoji(false); textareaRef.current?.focus(); }} onClose={() => setShowEmoji(false)} />}
+        <button type="button" onClick={onGifClick} className="shrink-0 w-8 h-8 md:w-9 md:h-9 rounded-xl flex items-center justify-center text-surface-400 hover:text-white hover:bg-surface-700/50 transition">
+          <span className="text-xs md:text-base font-bold">GIF</span>
+        </button>
+        <button type="button" onClick={() => fileInputRef.current?.click()} className="shrink-0 w-8 h-8 md:w-9 md:h-9 rounded-xl flex items-center justify-center text-surface-400 hover:text-white hover:bg-surface-700/50 transition">
+          <Paperclip className="w-3.5 h-3.5 md:w-4 md:h-4" />
+        </button>
+        <input ref={fileInputRef} type="file" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) { if (f.size > 50 * 1024 * 1024) { alert("File too large. Max 50MB."); return; } setAttachedFile(f); } }} />
+        <textarea ref={textareaRef} rows={1} placeholder="Type a message" value={message} onChange={handleTyping} onKeyDown={handleKeyDown}
+          inputMode="text" enterKeyHint="send" autoComplete="off"
+          className="flex-1 resize-none bg-transparent outline-none text-sm py-1.5 md:py-2 px-0.5 md:px-1 max-h-32 leading-relaxed text-white placeholder:text-surface-500 placeholder:text-xs md:placeholder:text-sm" />
+        {!message.trim() && !attachedFile && (
+          <button type="button" onClick={() => setShowVoice(true)} className="shrink-0 w-8 h-8 md:w-9 md:h-9 rounded-xl flex items-center justify-center text-surface-400 hover:text-white hover:bg-surface-700/50 transition">
+            <Mic className="w-3.5 h-3.5 md:w-4 md:h-4" />
+          </button>
+        )}
+        <button type="button" onClick={handleSend} disabled={(!message.trim() && !attachedFile) || sending || uploading}
+          className="shrink-0 w-9 h-9 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-brand-500 to-accent-500 text-white flex items-center justify-center shadow-lg shadow-brand-500/25 hover:shadow-brand-500/40 active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed">
+          {uploading ? (
+            <div className="w-3.5 h-3.5 md:w-4 md:h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          ) : (
+            <Send className="w-3.5 h-3.5 md:w-4 md:h-4 translate-x-[1px]" />
+          )}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default memo(MessageInput);
