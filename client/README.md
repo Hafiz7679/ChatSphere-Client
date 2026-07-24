@@ -32,7 +32,7 @@ The application communicates with the Express backend through REST APIs and Sock
 
 ### Frontend
 
-https://chat-sphere-client-nine.vercel.app
+https://chat-sphere-client-iota.vercel.app
 
 ### Backend API
 
