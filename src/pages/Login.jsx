@@ -38,7 +38,7 @@ const Login = () => {
     } catch (error) {
       const serverMsg = error.response?.data?.message;
       const isNetworkError = !error.response && error.request;
-      const msg = serverMsg || (isNetworkError ? "Cannot reach server. Check your internet connection or the server may be offline." : "Login failed");
+      const msg = serverMsg || error.message || (isNetworkError ? "Cannot reach server. Check your internet connection or the server may be offline." : "Login failed");
       toast.error(msg);
       if (msg.includes("verify your email")) {
         setShowVerifyPrompt(true);

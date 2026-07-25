@@ -77,7 +77,15 @@ const processQueue = (error, token = null) => {
 };
 
 API.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    const ct = response.headers["content-type"] || "";
+    if (ct.includes("text/html")) {
+      const msg = "Received HTML instead of JSON — API endpoint unreachable. Check that VITE_API_URL is set correctly in your Vercel dashboard.";
+      console.error("[API] " + msg + " URL was: " + response.config.url);
+      return Promise.reject(new Error(msg));
+    }
+    return response;
+  },
   async (error) => {
     const originalRequest = error?.config;
     if (!originalRequest) return Promise.reject(error);
