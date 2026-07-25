@@ -1,4 +1,5 @@
 {
+  "rootDirectory": ".",
   "framework": "vite",
   "buildCommand": "vite build",
   "outputDirectory": "build",
