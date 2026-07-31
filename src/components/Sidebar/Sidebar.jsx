@@ -4,7 +4,6 @@ import { MessageCircle, Plus, ShieldCheck, User, Search, Users, Archive, Pin } f
 import useChatStore from "../../store/useChatStore";
 import CreateGroupModal from "../GroupChat/CreateGroupModal";
 import Avatar from "../Avatar/Avatar";
-import ThemeToggle from "../ThemeToggle/ThemeToggle";
 
 const currentUser = (() => {
   try { return JSON.parse(localStorage.getItem("user")); }
@@ -146,7 +145,6 @@ const Sidebar = ({
             >
               <User className="w-4 h-4" />
             </button>
-            <ThemeToggle />
           </div>
         </div>
         <div className="relative">

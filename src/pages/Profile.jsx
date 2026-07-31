@@ -6,8 +6,6 @@ import useChatStore from "../store/useChatStore";
 import { disconnectSocket } from "../socket/socket";
 import Avatar from "../components/Avatar/Avatar";
 import Button from "../components/Button/Button";
-import ThemeToggle from "../components/ThemeToggle/ThemeToggle";
-import useTheme from "../hooks/useTheme";
 import { ChevronLeft, Camera } from "lucide-react";
 
 const Profile = () => {
@@ -108,8 +106,6 @@ const Profile = () => {
     try { await updateProfile({ settings: updated }); } catch { setSettings(settings); }
   };
 
-  const { themeMode, setTheme } = useTheme();
-
   return (
     <div className="min-h-screen bg-navy-800 bg-grid">
       <div className="fixed inset-0 bg-glow pointer-events-none" />
@@ -121,7 +117,6 @@ const Profile = () => {
             </button>
             <h1 className="text-xl font-bold text-white">Profile</h1>
           </div>
-          <ThemeToggle />
         </div>
 
         <div className="bg-surface-800/30 backdrop-blur-xl border border-surface-700/30 rounded-2xl p-8 shadow-glass mb-6 animate-fade-in">
@@ -188,28 +183,6 @@ const Profile = () => {
                 </button>
               </div>
             ))}
-            <div className="flex items-center justify-between pt-2 border-t border-surface-700/20">
-              <div>
-                <p className="text-sm font-medium text-white">Theme</p>
-                <p className="text-xs text-surface-500 mt-0.5">Dark / Light / System</p>
-              </div>
-              <div className="flex items-center gap-2">
-                {["dark", "light", "system"].map((mode) => (
-                  <button
-                    key={mode}
-                    type="button"
-                    onClick={() => setTheme(mode)}
-                    className={`px-3 py-1.5 text-xs font-medium rounded-lg capitalize transition ${
-                      themeMode === mode
-                        ? "bg-brand-500/15 text-brand-300 border border-brand-500/20"
-                        : "text-surface-400 hover:text-white border border-transparent"
-                    }`}
-                  >
-                    {mode === "dark" ? "🌙" : mode === "light" ? "☀️" : "💻"} {mode}
-                  </button>
-                ))}
-              </div>
-            </div>
             <div className="pt-2 border-t border-surface-700/20">
               <p className="text-sm font-medium text-white mb-2">Chat Wallpaper</p>
               <div className="flex flex-wrap gap-2 mb-2">

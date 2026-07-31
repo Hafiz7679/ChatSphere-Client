@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Menu, X, ShieldCheck } from "lucide-react";
 import Logo from "../Logo/Logo";
-import ThemeToggle from "../ThemeToggle/ThemeToggle";
 
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -36,7 +35,6 @@ const Navbar = () => {
               Admin Login
             </span>
           </Link>
-          <ThemeToggle />
           <Link to="/login" className="text-white hover:text-brand-400 transition font-medium">Log in</Link>
           <Link to="/register" className="px-6 py-3 rounded-xl bg-gradient-to-r from-brand-600 to-accent-600 text-white font-semibold shadow-lg shadow-brand-600/25 hover:scale-105 transition duration-300">Get Started</Link>
         </div>

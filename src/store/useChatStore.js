@@ -17,6 +17,8 @@ const useChatStore = create(
       // Active chat
       activeChat: null,
       setActiveChat: (chat) => set({ activeChat: chat, messages: [] }),
+      activeChatRoomId: null,
+      setActiveChatRoomId: (id) => set({ activeChatRoomId: id }),
 
       // Messages
       messages: [],
@@ -98,8 +100,6 @@ const useChatStore = create(
       setSoundEnabled: (enabled) => set({ soundEnabled: enabled }),
       notificationsEnabled: true,
       setNotificationsEnabled: (enabled) => set({ notificationsEnabled: enabled }),
-      themeMode: "system",
-      setThemeMode: (mode) => set({ themeMode: mode }),
 
       // Call state
       isCallActive: false,
@@ -167,7 +167,6 @@ const useChatStore = create(
         chatWallpaper: state.chatWallpaper,
         soundEnabled: state.soundEnabled,
         notificationsEnabled: state.notificationsEnabled,
-        themeMode: state.themeMode,
         pinnedChats: state.pinnedChats,
         archivedChats: state.archivedChats,
       }),

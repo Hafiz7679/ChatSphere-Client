@@ -3,10 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { getSocket } from "../socket/socket";
 import { getUsers, getMessages, getChats, createChat, sendMessage } from "../api/api";
 import useChatStore from "../store/useChatStore";
-import useSocket from "../hooks/useSocket";
-import useMessageSync from "../hooks/useMessageSync";
-import useTheme from "../hooks/useTheme";
-import usePushNotifications from "../hooks/usePushNotifications";
 import Sidebar from "../components/Sidebar/Sidebar";
 import ChatHeader from "../components/ChatHeader/ChatHeader";
 import ChatBody from "../components/ChatBody/ChatBody";
@@ -63,6 +59,7 @@ const Chat = () => {
 
   const callActionsRef = useRef({});
   const activeChatRef = useRef(null);
+  const activeChatRoomIdRef = useRef(null);
   const usersRef = useRef([]);
   const soundEnabledRef = useRef(true);
   const isCallActiveRef = useRef(false);
@@ -77,6 +74,8 @@ const Chat = () => {
   const callData = useChatStore((s) => s.callData);
   const callStatus = useChatStore((s) => s.callStatus);
   const setActiveChat = useChatStore((s) => s.setActiveChat);
+  const activeChatRoomId = useChatStore((s) => s.activeChatRoomId);
+  const setActiveChatRoomId = useChatStore((s) => s.setActiveChatRoomId);
   const setMessages = useChatStore((s) => s.setMessages);
   const addMessage = useChatStore((s) => s.addMessage);
   const replaceTempMessage = useChatStore((s) => s.replaceTempMessage);
@@ -86,12 +85,8 @@ const Chat = () => {
   const clearUnread = useChatStore((s) => s.clearUnread);
   const setChats = useChatStore((s) => s.setChats);
 
-  useSocket();
-  useMessageSync();
-  usePushNotifications();
-  const { theme } = useTheme();
-
   useEffect(() => { activeChatRef.current = activeChat; }, [activeChat]);
+  useEffect(() => { activeChatRoomIdRef.current = activeChatRoomId; }, [activeChatRoomId]);
   useEffect(() => { usersRef.current = users; }, [users]);
   useEffect(() => { soundEnabledRef.current = soundEnabled; }, [soundEnabled]);
   useEffect(() => { isCallActiveRef.current = isCallActive; }, [isCallActive]);
@@ -161,6 +156,7 @@ const Chat = () => {
     };
 
     const handleMessagesRead = ({ chatId }) => {
+      if (chatId && chatId !== activeChatRoomIdRef.current) return;
       const msgs = useChatStore.getState().messages;
       msgs.forEach((msg) => {
         if (msg.sender?._id !== currentUserId && msg.status !== "read") {
@@ -223,7 +219,10 @@ const Chat = () => {
               typeof other === "object"
                 ? other
                 : otherUsers.find((u) => u._id === other);
-            if (otherUser) setActiveChat(otherUser);
+            if (otherUser) {
+              setActiveChat(otherUser);
+              setActiveChatRoomId(latest._id);
+            }
           } else if (latest.isGroupChat) {
             setActiveChat({
               _id: latest._id,
@@ -231,6 +230,7 @@ const Chat = () => {
               isGroup: true,
               chat: latest,
             });
+            setActiveChatRoomId(latest._id);
           }
         } else if (otherUsers.length > 0 && !activeChatRef.current) {
           setActiveChat(otherUsers[0]);
@@ -242,7 +242,7 @@ const Chat = () => {
     };
     loadUsers();
     return () => { cancelled = true; };
-  }, [currentUserId, setActiveChat, setChats]);
+  }, [currentUserId, setActiveChat, setChats, setActiveChatRoomId]);
 
   useEffect(() => {
     if (!activeChat || !currentUserId) return;
@@ -262,10 +262,14 @@ const Chat = () => {
         if (data.length < 50) setHasMore(false);
         clearUnread(activeChat._id);
         const socket = getSocket();
-        socket.emit("mark_as_read", {
-          chatId: activeChat._id,
-          senderId: currentUserId,
-        });
+        const roomId = data[0]?.chat || useChatStore.getState().activeChatRoomId;
+        if (data[0]?.chat) setActiveChatRoomId(data[0].chat);
+        if (roomId) {
+          socket.emit("mark_as_read", {
+            chatId: roomId,
+            senderId: currentUserId,
+          });
+        }
       } catch {
       } finally {
         if (!cancelled) setMessagesLoading(false);
@@ -305,20 +309,24 @@ const Chat = () => {
       const chatsList = useChatStore.getState().chats;
       const existingChat = chatsList.find(
         (c) =>
-          !c.isGroupChat &&
-          c.users.some((u) => (u._id || u) === user._id)
+          (!c.isGroupChat && c.users.some((u) => (u._id || u) === user._id)) ||
+          c._id === user._id
       );
-      if (!existingChat) {
+      if (existingChat) {
+        setActiveChatRoomId(existingChat._id);
+      } else {
         try {
           const res = await createChat(user._id);
           if (res.data) {
-            useChatStore.getState().addChat(res.data.data || res.data);
+            const newChat = res.data.data || res.data;
+            useChatStore.getState().addChat(newChat);
+            setActiveChatRoomId(newChat._id);
           }
         } catch {}
       }
       clearUnread(user._id);
     },
-    [clearUnread, setActiveChat]
+    [clearUnread, setActiveChat, setActiveChatRoomId]
   );
 
   const handleBack = useCallback(() => {
@@ -344,13 +352,15 @@ const Chat = () => {
 
   const handleTogglePin = useCallback(() => {
     const { togglePinnedChat } = useChatStore.getState();
-    if (activeChat) togglePinnedChat(activeChat._id);
-  }, [activeChat]);
+    const roomId = useChatStore.getState().activeChatRoomId;
+    if (roomId) togglePinnedChat(roomId);
+  }, []);
 
   const handleToggleArchive = useCallback(() => {
     const { toggleArchivedChat } = useChatStore.getState();
-    if (activeChat) toggleArchivedChat(activeChat._id);
-  }, [activeChat]);
+    const roomId = useChatStore.getState().activeChatRoomId;
+    if (roomId) toggleArchivedChat(roomId);
+  }, []);
 
   const handleDragOver = useCallback((e) => {
     e.preventDefault();
@@ -570,7 +580,7 @@ const Chat = () => {
       {showMediaGallery && activeChat && (
         <Suspense fallback={null}>
           <MediaGallery
-            chatId={activeChat._id || activeChat.chat?._id}
+            chatId={activeChatRoomId || activeChat.chat?._id || activeChat._id}
             onClose={() => setShowMediaGallery(false)}
           />
         </Suspense>

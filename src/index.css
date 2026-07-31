@@ -20,7 +20,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background-color: rgb(11 16 32);
   color: rgb(241 245 249);
-  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 input, textarea, select, button {
@@ -55,13 +54,12 @@ input, textarea, select, button {
 @keyframes slideUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
 /*
- * ===== THEME SYSTEM =====
+ * ===== CHATSPHERE DESIGN =====
  *
  * Colors use space-separated RGB triplets (e.g. "11 16 32") so Tailwind
  * opacity utilities like bg-surface-800/50 work correctly.
  *
- * Dark mode = .dark class on <html> (set by inline script in index.html)
- * Light mode = no .dark class (overridden via :root:not(.dark))
+ * ChatSphere uses the original permanent dark theme.
  */
 
 :root {
@@ -115,99 +113,16 @@ input, textarea, select, button {
   --clr-surface-900: 13 19 37;
 }
 
-/* LIGHT MODE — activated when <html> has no .dark class */
-:root:not(.dark) {
-  --clr-navy-800: 255 255 255;
-  --clr-navy-900: 255 255 255;
-  --clr-navy-950: 248 250 252;
-
-  --clr-surface-700: 226 232 240;
-  --clr-surface-800: 255 255 255;
-  --clr-surface-900: 241 245 249;
-
-  background-color: rgb(248 250 252);
-  color: rgb(15 23 42);
-}
-
-/*
- * Smooth transitions on themeable properties.
- * NOT using `*` selector to avoid performance issues on large DOMs.
- */
-body,
-.bg-transition {
-  transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
-}
-
 /* Override standard Tailwind colors that are not custom-defined */
-
-/* In light mode, swap text-white to dark text on theme backgrounds.
-   Gradient/colored buttons keep white text via the second rule. */
-:root:not(.dark) .text-white {
-  color: rgb(15 23 42);
-}
-
-:root:not(.dark) :is(
-  .from-brand-500, .from-brand-600, .from-brand-700,
-  .to-accent-500, .to-accent-600, .to-accent-700,
-  .bg-brand-500, .bg-brand-600, .bg-brand-700,
-  .bg-accent-500, .bg-accent-600,
-  .bg-gradient-to-r, .bg-gradient-to-br,
-  .bg-red-500, .bg-emerald-500, .bg-rose-500
-).text-white {
-  color: #fff !important;
-}
 
 :root.dark .text-black {
   color: rgb(226 232 240) !important;
 }
 
-:root:not(.dark) .border-white\/30,
-:root:not(.dark) .border-white\/20 {
-  border-color: rgba(0, 0, 0, 0.1) !important;
-}
-
-:root:not(.dark) .border-white\/10 {
-  border-color: rgba(0, 0, 0, 0.06) !important;
-}
-
-:root:not(.dark) .bg-white {
-  background-color: rgb(255 255 255) !important;
-}
-
-:root:not(.dark) .placeholder\:text-surface-500::placeholder {
-  color: rgb(148 163 184) !important;
-}
-
-:root:not(.dark) .bg-grid {
-  background-image:
-    linear-gradient(rgba(124, 58, 237, 0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(124, 58, 237, 0.06) 1px, transparent 1px) !important;
-}
-
-:root:not(.dark) .bg-glow {
-  background: radial-gradient(circle at 50% 0%, rgba(124, 58, 237, 0.06), transparent 70%) !important;
-}
-
-:root:not(.dark) .bg-navy-900\/80 {
-  background-color: rgba(255, 255, 255, 0.9) !important;
-}
-
-:root:not(.dark) .bg-navy-950\/50,
-:root:not(.dark) .bg-navy-900\/50 {
-  background-color: rgba(248, 250, 252, 0.8) !important;
-}
-
-/* Toast notifications — react-hot-toast theme-aware */
+/* Toast notifications */
 div[role="status"] {
   background-color: rgb(var(--clr-surface-700)) !important;
   color: rgb(var(--clr-surface-100)) !important;
   border: 1px solid rgb(var(--clr-surface-600) / 0.3) !important;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
-}
-
-:root:not(.dark) div[role="status"] {
-  background-color: #ffffff !important;
-  color: #0f172a !important;
-  border: 1px solid #e2e8f0 !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
 }
